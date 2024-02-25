@@ -1,3 +1,6 @@
+"use client";
+import LayoutThing from "@/components/LayoutThing";
+import "./globals.css";
 export default function RootLayout({
   children,
 }: {
@@ -5,9 +8,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        <nav>
-          <h1>My Rooot Navbar</h1>
+      <body className="bg-svg-background bg-cover bg-no-repeat">
+        <nav className="">
+          <LayoutThing />
+          jii
         </nav>
         {children}
       </body>
