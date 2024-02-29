@@ -11,7 +11,6 @@ export default function RootLayout({
       <body className="bg-svg-background bg-cover bg-no-repeat">
         <nav className="">
           <LayoutThing />
-          jii
         </nav>
         {children}
       </body>

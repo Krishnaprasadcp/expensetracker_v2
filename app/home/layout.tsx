@@ -1,9 +1,6 @@
+import Link from "next/link";
+
 const HomeLayout = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <>
-      <nav>Navbar links</nav>
-      {children}
-    </>
-  );
+  return <>{children}</>;
 };
 export default HomeLayout;
