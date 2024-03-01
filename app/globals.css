@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Login Section */
 .loginInput {
   @apply border bg-slate-400 bg-opacity-0 border-b-4 border-x-0 border-t-0 w-11/12;
+}
+
+/* Main Navbar section */
+.topnavbar {
+  @apply text-xl text-gray-200;
 }

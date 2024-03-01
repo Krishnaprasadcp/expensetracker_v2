@@ -21,7 +21,7 @@ function LayoutThing() {
       <div className="flex justify-between mx-8 mt-4">
         <div>
           {!isLoggin && (
-            <nav className="text-xl text-gray-300">
+            <nav className="topnavbar">
               <Link className="mr-8" href={"#"}>
                 SignIn
               </Link>
@@ -29,7 +29,7 @@ function LayoutThing() {
             </nav>
           )}
           {isLoggin && (
-            <nav className="text-xl text-gray-300 grid grid-flow-col gap-4">
+            <nav className="topnavbar grid grid-flow-col gap-4">
               <Link href="/home">Home</Link>
               <Link href="/home/expenses">Expenses</Link>
               <Link href="/home/income">Income</Link>
