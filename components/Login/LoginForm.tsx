@@ -3,14 +3,21 @@
 import { useState } from "react";
 
 const LoginForm: React.FC = () => {
-  //   const [emailLabelFocus, setEmailLabelFocus] = useState(false);
-  const emailLabelFocus = false;
+  const [emailLabelFocus, setEmailLabelFocus] = useState(false);
+  const [passwordLabelFocus, setPasswordLabelFocus] = useState(false);
+  // const emailLabelFocus = false;
   const emailBlurHandler = () => {
-    // setEmailLabelFocus(false);
+    setEmailLabelFocus(false);
+  };
+  const passwordBlurHandler = () => {
+    setPasswordLabelFocus(false);
   };
 
   const emailFocusHandler = () => {
-    // setEmailLabelFocus(true);
+    setEmailLabelFocus(true);
+  };
+  const passwordFocusHandler = () => {
+    setPasswordLabelFocus(true);
   };
   return (
     <>
@@ -34,12 +41,18 @@ const LoginForm: React.FC = () => {
             />
           </div>
           <div className="relative w-full mx-3 mt-24">
-            {!emailLabelFocus && (
+            {!passwordLabelFocus && (
               <p className="absolute text-xl bottom-2 text-gray-200">
                 Your Password
               </p>
             )}
-            <input className="loginInput" id="password" type="text" />
+            <input
+              className="loginInput"
+              id="password"
+              type="text"
+              onFocus={passwordFocusHandler}
+              onBlur={passwordBlurHandler}
+            />
           </div>
         </div>
         <div className="text-gray-200 text-xl flex justify-around mt-28 pb-12  mx-4">

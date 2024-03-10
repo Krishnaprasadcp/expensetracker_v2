@@ -11,3 +11,13 @@
 .topnavbar {
   @apply text-xl text-gray-200;
 }
+
+.addexpenseinput {
+  @apply bg-blue-300 rounded-full w-full  border-gray-200 border-2 placeholder-gray-200 placeholder:px-5;
+}
+.tablemargins {
+  @apply border-r-2 border-white px-16 py-4;
+}
+.tablethirdcol {
+  @apply px-16 py-4;
+}
