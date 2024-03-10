@@ -1,11 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 const LoginForm: React.FC = () => {
   const [emailLabelFocus, setEmailLabelFocus] = useState(false);
   const [passwordLabelFocus, setPasswordLabelFocus] = useState(false);
-  // const emailLabelFocus = false;
+
   const emailBlurHandler = () => {
     setEmailLabelFocus(false);
   };
@@ -57,7 +58,9 @@ const LoginForm: React.FC = () => {
         </div>
         <div className="text-gray-200 text-xl flex justify-around mt-28 pb-12  mx-4">
           <button>Login</button>
-          <button>Create account</button>
+          <Link href="/signup">
+            <button type="button">Create account</button>
+          </Link>
         </div>
       </div>
     </>
