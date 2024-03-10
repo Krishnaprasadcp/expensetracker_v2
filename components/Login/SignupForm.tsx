@@ -398,11 +398,13 @@ const SignupForm = () => {
                     </tr>
                   </thead>
                   <tbody className="">
-                    <tr className="">
-                      <td>WIFI</td>
-                      <td>Amount</td>
-                      <td>Date</td>
-                    </tr>
+                    {monthlyExpenseDatas.map((data) => (
+                      <tr className="">
+                        <td>{data.category}</td>
+                        <td>{data.amount}</td>
+                        <td>{data.date}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
                 <div className="mt-5">
