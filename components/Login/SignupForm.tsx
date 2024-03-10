@@ -1,5 +1,5 @@
 "use client";
-import { useReducer, useRef } from "react";
+import { useReducer, useRef, useState } from "react";
 
 interface INITIALARGS {
   firstName: boolean;
@@ -29,6 +29,13 @@ const initialArgs: INITIALARGS = {
   genderSelection: "",
   gender: true,
 };
+
+interface MonthlyExpense {
+  category: string;
+  amount: string;
+  date: string;
+}
+
 function reducer(state: INITIALARGS, action: Action) {
   switch (action.type) {
     case "firstName":
@@ -76,7 +83,12 @@ function reducer(state: INITIALARGS, action: Action) {
 
 const SignupForm = () => {
   const [state, dispatch] = useReducer(reducer, initialArgs);
-
+  const [nextSigninForm, setNextSigninForm] = useState(false); //set it to false after all done
+  const [monthlyExpenseForm, setMonthlyExpenseForm] = useState(false);
+  const [monthlyExpenseDatas, setMonthlyExpenseData] = useState<
+    MonthlyExpense[]
+  >([]);
+  //Signup Form
   const firstNameInput = useRef<HTMLInputElement>(null);
   const secondNameInput = useRef<HTMLInputElement>(null);
   const dobInput = useRef<HTMLInputElement>(null);
@@ -85,6 +97,11 @@ const SignupForm = () => {
   const rePasswordInput = useRef<HTMLInputElement>(null);
   const addressInput = useRef<HTMLInputElement>(null);
   const phoneNumberInput = useRef<HTMLInputElement>(null);
+
+  //Intial monthly expense
+  const categoryInput = useRef<HTMLInputElement>(null);
+  const priceInput = useRef<HTMLInputElement>(null);
+  const monthlyDateInput = useRef<HTMLInputElement>(null);
 
   const firstNameFocusHandler = () => {
     dispatch({ type: "firstName" });
@@ -167,160 +184,297 @@ const SignupForm = () => {
     }
   };
 
+  const nextButtonHandler = () => {
+    setNextSigninForm(true);
+  };
+
+  const prevButtonHandler = () => {
+    setNextSigninForm(false);
+  };
+
+  const monthlyExpenseFormAddButtonHandler = () => {
+    setMonthlyExpenseForm(true);
+  };
+  const monthlyExpenseFormCancelButtonHandler = () => {
+    setMonthlyExpenseForm(false);
+  };
+  const addMonthlyExpense = () => {
+    const monthlyExpense = {
+      category: categoryInput.current!.value,
+      amount: priceInput.current!.value,
+      date: monthlyDateInput.current!.value,
+    };
+    const monthlyExpenseData = [...monthlyExpenseDatas, monthlyExpense];
+    console.log(monthlyExpense);
+    setMonthlyExpenseData(monthlyExpenseData);
+  };
+  console.log(monthlyExpenseDatas);
+
   return (
     <>
       <div className="w-full text-center">
         <p className="text-2xl text-gray-200 mt-2">EXPENSE TRACKER</p>
         <p className="text-xl mt-8 text-white mb-5">SIGN UP</p>
         <div className="flex justify-center ">
-          <form className="w-1/3 bg-slate-500 opacity-80 rounded-2xl mb-8">
-            <p className="text-gray-200 text-xl">Enter your details:</p>
-            <div className="relative  mx-3 mt-10">
-              {state.firstName && (
-                <p className="signupinputelementlabel">Your first name</p>
-              )}
+          {!nextSigninForm && (
+            <form className="w-1/3 bg-slate-500 opacity-80 rounded-2xl mb-8">
+              <p className="text-gray-200 text-xl">Enter your details:</p>
+              <div className="relative  mx-3 mt-10">
+                {state.firstName && (
+                  <p className="signupinputelementlabel">Your first name</p>
+                )}
 
-              <input
-                className="loginInput "
-                id="firstName"
-                type="text"
-                onFocus={firstNameFocusHandler}
-                onBlur={firstNameBlurHandler}
-                ref={firstNameInput}
-              />
-            </div>
-            <div className="relative  mx-3 mt-10">
-              {state.secondName && (
-                <p className="signupinputelementlabel">Your second name</p>
-              )}
+                <input
+                  className="loginInput "
+                  id="firstName"
+                  type="text"
+                  onFocus={firstNameFocusHandler}
+                  onBlur={firstNameBlurHandler}
+                  ref={firstNameInput}
+                />
+              </div>
+              <div className="relative  mx-3 mt-10">
+                {state.secondName && (
+                  <p className="signupinputelementlabel">Your second name</p>
+                )}
 
-              <input
-                className="loginInput"
-                id="secondName"
-                type="text"
-                onFocus={secondNameFocusHandler}
-                onBlur={secondNameBlurHandler}
-                ref={secondNameInput}
-              />
-            </div>
-            <div className=" flex relative justify-between   mx-8 mt-10 border-4 border-b-gray-200 border-t-0 border-r-0 border-l-0">
-              {state.dateOfBirth && (
-                <p className="signupinputelementlabel -ml-3">Date of Birth</p>
-              )}
+                <input
+                  className="loginInput"
+                  id="secondName"
+                  type="text"
+                  onFocus={secondNameFocusHandler}
+                  onBlur={secondNameBlurHandler}
+                  ref={secondNameInput}
+                />
+              </div>
+              <div className=" flex relative justify-between   mx-8 mt-10 border-4 border-b-gray-200 border-t-0 border-r-0 border-l-0">
+                {state.dateOfBirth && (
+                  <p className="signupinputelementlabel -ml-3">Date of Birth</p>
+                )}
 
-              <input
-                type="date"
-                className={` bg-inherit  w-full border-0 border-t-0 ${
-                  state.dateOfBirth
-                    ? "text-gray-500 text-opacity-0"
-                    : "text-gray-200"
-                } `}
-                placeholder="Enter a date"
-                onFocus={dobFocusHandler}
-                onBlur={dobBlurHandler}
-                ref={dobInput}
-              />
-            </div>
-            <div className="relative  mx-3 mt-10">
-              {state.email && (
-                <p className="signupinputelementlabel">Your Email</p>
-              )}
+                <input
+                  type="date"
+                  className={` bg-inherit  w-full border-0 border-t-0 ${
+                    state.dateOfBirth
+                      ? "text-gray-500 text-opacity-0"
+                      : "text-gray-200"
+                  } `}
+                  placeholder="Enter a date"
+                  onFocus={dobFocusHandler}
+                  onBlur={dobBlurHandler}
+                  ref={dobInput}
+                />
+              </div>
+              <div className="relative  mx-3 mt-10">
+                {state.email && (
+                  <p className="signupinputelementlabel">Your Email</p>
+                )}
 
-              <input
-                className="loginInput"
-                id="email"
-                type="email"
-                onFocus={emailFocusHandler}
-                onBlur={emailBlurHandler}
-                ref={emailInput}
-              />
-            </div>
-            <div className="relative  mx-3 mt-10">
-              {state.password && (
-                <p className="signupinputelementlabel">Enter a password</p>
-              )}
+                <input
+                  className="loginInput"
+                  id="email"
+                  type="email"
+                  onFocus={emailFocusHandler}
+                  onBlur={emailBlurHandler}
+                  ref={emailInput}
+                />
+              </div>
+              <div className="relative  mx-3 mt-10">
+                {state.password && (
+                  <p className="signupinputelementlabel">Enter a password</p>
+                )}
 
-              <input
-                className="loginInput"
-                id="password"
-                type="password"
-                onFocus={passwordFocusHandler}
-                onBlur={passwordBlurHandler}
-                ref={passwordInput}
-              />
-            </div>
-            <div className="relative  mx-3 mt-10">
-              {state.rePassword && (
-                <p className="signupinputelementlabel">Re enter the password</p>
-              )}
+                <input
+                  className="loginInput"
+                  id="password"
+                  type="password"
+                  onFocus={passwordFocusHandler}
+                  onBlur={passwordBlurHandler}
+                  ref={passwordInput}
+                />
+              </div>
+              <div className="relative  mx-3 mt-10">
+                {state.rePassword && (
+                  <p className="signupinputelementlabel">
+                    Re enter the password
+                  </p>
+                )}
 
-              <input
-                className="loginInput"
-                id="repassword"
-                type="text"
-                onFocus={rePasswordFocusHandler}
-                onBlur={rePasswordBlurHandler}
-                ref={rePasswordInput}
-              />
-            </div>
-            <div className="relative  mx-3 mt-10">
-              {state.address && (
-                <p className="signupinputelementlabel">Address</p>
-              )}
+                <input
+                  className="loginInput"
+                  id="repassword"
+                  type="text"
+                  onFocus={rePasswordFocusHandler}
+                  onBlur={rePasswordBlurHandler}
+                  ref={rePasswordInput}
+                />
+              </div>
+              <div className="relative  mx-3 mt-10">
+                {state.address && (
+                  <p className="signupinputelementlabel">Address</p>
+                )}
 
-              <input
-                className="loginInput"
-                id="address"
-                type="text"
-                onFocus={addressFocusHandler}
-                onBlur={addressBlurHandler}
-                ref={addressInput}
-              />
-            </div>
-            <div className="relative  mx-3 mt-10">
-              {state.phoneNumber && (
-                <p className="signupinputelementlabel">Your Phone number</p>
-              )}
+                <input
+                  className="loginInput"
+                  id="address"
+                  type="text"
+                  onFocus={addressFocusHandler}
+                  onBlur={addressBlurHandler}
+                  ref={addressInput}
+                />
+              </div>
+              <div className="relative  mx-3 mt-10">
+                {state.phoneNumber && (
+                  <p className="signupinputelementlabel">Your Phone number</p>
+                )}
 
-              <input
-                className="loginInput"
-                id="phoneNumber"
-                type="tel"
-                onFocus={phoneNumberFocusHandler}
-                onBlur={phoneNumberBlurHandler}
-                ref={phoneNumberInput}
-              />
-            </div>
-            <div className="relative  mx-3 mt-10">
-              {state.gender && (
-                <p className="absolute text-xl bottom-2 left-6 text-gray-100 text-opacity-100">
-                  Your Gender
-                </p>
-              )}
+                <input
+                  className="loginInput"
+                  id="phoneNumber"
+                  type="tel"
+                  onFocus={phoneNumberFocusHandler}
+                  onBlur={phoneNumberBlurHandler}
+                  ref={phoneNumberInput}
+                />
+              </div>
+              <div className="relative  mx-3 mt-10">
+                {state.gender && (
+                  <p className="absolute text-xl bottom-2 left-6 text-gray-100 text-opacity-100">
+                    Your Gender
+                  </p>
+                )}
 
-              <select
-                name=""
-                className="loginInput"
-                onFocus={genderSelctionFocusHandler}
-                onBlur={genderSelectionBlurHandler}
-                onChange={(e) => {
-                  dispatch({ type: "genderSelection", gender: e.target.value });
-                }}
-              >
-                <option value=""></option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-              </select>
+                <select
+                  name=""
+                  className="loginInput"
+                  onFocus={genderSelctionFocusHandler}
+                  onBlur={genderSelectionBlurHandler}
+                  onChange={(e) => {
+                    dispatch({
+                      type: "genderSelection",
+                      gender: e.target.value,
+                    });
+                  }}
+                >
+                  <option value=""></option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </div>
+              <div className="flex justify-around mt-7 mb-10 text-gray-100 font-bold">
+                <button className="border-2 border-white rounded-full py-1 px-3">
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={nextButtonHandler}
+                  className="border-2 border-white rounded-full py-1 px-3"
+                >
+                  Next
+                </button>
+              </div>
+            </form>
+          )}
+
+          {nextSigninForm && (
+            <div className="bg-slate-600 opacity-70 w-2/3 p-3 rounded-2xl">
+              <div className="flex justify-between text-gray-100 text-xl">
+                <p>ADD YOUR MONTHLY EXPENSE</p>
+                <p>(If you add one click submit)</p>
+              </div>
+              <div>
+                <table className="w-full mt-2">
+                  <thead>
+                    <tr>
+                      <td className="bg-blue-950 rounded-full py-2 px-10">
+                        Category
+                      </td>
+                      <td className="bg-blue-950 rounded-full py-2 px-10">
+                        Amount
+                      </td>
+                      <td className="bg-blue-950 rounded-full py-2 px-10">
+                        Date
+                      </td>
+                    </tr>
+                  </thead>
+                  <tbody className="">
+                    <tr className="">
+                      <td>WIFI</td>
+                      <td>Amount</td>
+                      <td>Date</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div className="mt-5">
+                  <button
+                    type="button"
+                    onClick={monthlyExpenseFormAddButtonHandler}
+                    className="rounded-full border-4 border-gray-100 py-1 px-16"
+                  >
+                    ADD+
+                  </button>
+                </div>
+                {monthlyExpenseForm && (
+                  <div>
+                    <form className="flex flex-col ">
+                      <div className="border-2 border-gray-100 rounded-full w-full py-2 px-7 mt-3">
+                        <input
+                          type="text"
+                          placeholder="Enter your category"
+                          ref={categoryInput}
+                          className=" outline-0  bg-inherit w-full  text-gray-50"
+                        />
+                      </div>
+                      <div className="border-2 border-gray-100 rounded-full w-full py-2 px-7 mt-3">
+                        <input
+                          type="text"
+                          placeholder="Enter the price"
+                          ref={priceInput}
+                          className="outline-0  bg-inherit w-full  text-gray-50"
+                        />
+                      </div>
+                      <div className="border-2 border-gray-100 rounded-full w-full py-2 px-7 mt-3">
+                        <input
+                          type="date"
+                          placeholder="Enter the payment date"
+                          ref={monthlyDateInput}
+                          className="outline-0  bg-inherit w-full  text-gray-50"
+                        />
+                      </div>
+                      <div className="flex justify-around  mx-4 mt-4 text-gray-50 mb-4">
+                        <button
+                          type="button"
+                          onClick={addMonthlyExpense}
+                          className="border-4 border-gray-100 rounded-full py-1 px-4"
+                        >
+                          Submit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={monthlyExpenseFormCancelButtonHandler}
+                          className="border-4 border-gray-100 rounded-full py-1 px-4"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-between mx-4">
+                <button
+                  className="rounded-full py-1 px-4 border-2 border-gray-200 text-gray-50"
+                  type="button"
+                  onClick={prevButtonHandler}
+                >
+                  Prev
+                </button>
+                <button className="rounded-full py-1 px-4 border-2 border-gray-200 text-gray-50">
+                  SignUp
+                </button>
+              </div>
             </div>
-            <div className="flex justify-around mt-7 mb-10 text-gray-100 font-bold">
-              <button className="border-2 border-white rounded-full py-1 px-3">
-                Submit
-              </button>
-              <button className="border-2 border-white rounded-full py-1 px-3">
-                Cancel
-              </button>
-            </div>
-          </form>
+          )}
         </div>
       </div>
     </>
