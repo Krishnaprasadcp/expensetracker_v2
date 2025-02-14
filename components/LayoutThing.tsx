@@ -1,18 +1,22 @@
 "use client";
+import { useAppSelector } from "@/store/hooks";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 function LayoutThing() {
+  const isLoginValue = useAppSelector((state) => state.user.isLogin);
+  console.log(isLoginValue);
+
   const [time, setTime] = useState(() =>
     typeof window !== "undefined" ? new Date() : null
   );
   const [isLoggin, setIsLoggin] = useState(true);
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      setTime(new Date());
-    }, 1000);
+  // useEffect(() => {
+  //   const intervalId = setInterval(() => {
+  //     setTime(new Date());
+  //   }, 1000);
 
-    return () => clearInterval(intervalId);
-  }, []);
+  //   return () => clearInterval(intervalId);
+  // }, []);
   const logoutHandler = () => {
     setIsLoggin(false);
   };
@@ -43,11 +47,11 @@ function LayoutThing() {
         </div>
         <div className="text-gray-200 text-xl">
           <h4>
-            Time:{time.getHours()}:{time.getMinutes()}:{time.getSeconds()}
+            {/* Time:{time?.getHours()}:{time?.getMinutes()}:{time?.getSeconds()} */}
           </h4>
           <div>
             <p>
-              Date:{time.getDate()}-{time.getMonth()}-{time.getFullYear()}
+              {/* Date:{time?.getDate()}-{time?.getMonth()}-{time?.getFullYear()} */}
             </p>
           </div>
         </div>

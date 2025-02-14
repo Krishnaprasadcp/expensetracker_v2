@@ -1,11 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation"; // To navigate after login
+import Link from "next/link";
+import { LoginFormSubmisionAction } from "@/app/actions/loginFormSubmission";
 
 const LoginForm: React.FC = () => {
   const [emailLabelFocus, setEmailLabelFocus] = useState(false);
   const [passwordLabelFocus, setPasswordLabelFocus] = useState(false);
+  const router = useRouter();
 
   const emailBlurHandler = () => {
     setEmailLabelFocus(false);
@@ -20,12 +23,28 @@ const LoginForm: React.FC = () => {
   const passwordFocusHandler = () => {
     setPasswordLabelFocus(true);
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const isSuccess = await LoginFormSubmisionAction(formData);
+
+    if (isSuccess) {
+      // Only navigate if the login was successful
+      router.push("/home");
+    } else {
+      // Handle failure (e.g., show an error message to the user)
+      console.log("Login failed.");
+      // You can also set a state to show an error message on the UI
+    }
+  };
+
   return (
-    <>
-      <div className=" bg-slate-400 bg-opacity-50 w-full rounded-3xl mt-28">
-        <p className="text text-2xl  text-gray-100 text-center pt-20">
-          LOG INTO YOUR ACCOUNT
-        </p>
+    <div className="bg-slate-400 bg-opacity-50 w-full rounded-3xl mt-28">
+      <p className="text text-2xl text-gray-100 text-center pt-20">
+        LOG INTO YOUR ACCOUNT
+      </p>
+      <form onSubmit={handleSubmit}>
         <div className="mt-20">
           <div className="relative w-full mx-3">
             {!emailLabelFocus && (
@@ -37,6 +56,7 @@ const LoginForm: React.FC = () => {
               className="loginInput"
               id="email"
               type="text"
+              name="email"
               onFocus={emailFocusHandler}
               onBlur={emailBlurHandler}
             />
@@ -50,20 +70,22 @@ const LoginForm: React.FC = () => {
             <input
               className="loginInput"
               id="password"
-              type="text"
+              type="password" // Change to "password" for better security
+              name="password"
               onFocus={passwordFocusHandler}
               onBlur={passwordBlurHandler}
             />
           </div>
         </div>
-        <div className="text-gray-200 text-xl flex justify-around mt-28 pb-12  mx-4">
-          <button>Login</button>
+        <div className="text-gray-200 text-xl flex justify-around mt-28 pb-12 mx-4">
+          <button type="submit">Login</button>
           <Link href="/signup">
             <button type="button">Create account</button>
           </Link>
         </div>
-      </div>
-    </>
+      </form>
+    </div>
   );
 };
+
 export default LoginForm;

@@ -1,6 +1,7 @@
 "use client";
 import LayoutThing from "@/components/LayoutThing";
 import "./globals.css";
+import StoreProvider from "./storeProvider";
 export default function RootLayout({
   children,
 }: {
@@ -9,10 +10,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-svg-background bg-cover bg-no-repeat">
-        <nav className="">
-          <LayoutThing />
-        </nav>
-        {children}
+        <StoreProvider>
+          <nav className="">
+            <LayoutThing />
+          </nav>
+          {children}
+        </StoreProvider>
       </body>
     </html>
   );

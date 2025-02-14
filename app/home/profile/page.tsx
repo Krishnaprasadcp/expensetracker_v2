@@ -1,6 +1,15 @@
 import Image from "next/image";
 
-const Profile: React.FC = () => {
+const Profile: React.FC = async () => {
+  const fetchUsers = async () => {
+    const response = await fetch(`${process.env.BASE_URL}/api/users`); // Using absolute URL from the env variable
+    console.log("hii");
+
+    const data = await response.json();
+    console.log(data);
+    return data;
+  };
+  const data = await fetchUsers();
   return (
     <>
       <div>
