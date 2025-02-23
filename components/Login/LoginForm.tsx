@@ -7,7 +7,22 @@ import { z } from "zod";
 import LoadingScreen from "../LoadingScreen";
 
 const signInSchema = z.object({
-  email: z.string().email({ message: "Invalid format of email" }),
+  email: z
+    .string()
+    .trim()
+    .superRefine((val, ctx) => {
+      if (val.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Email cannot be empty",
+        });
+      } else if (!/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(val)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Invalid format of email",
+        });
+      }
+    }),
   password: z.string().min(1, { message: "Password cannot be empty" }),
 });
 
@@ -49,6 +64,7 @@ const LoginForm: React.FC = () => {
   const [state, dispatch] = useReducer(reducer, initialArgs);
   const [formError, setFormError] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false); // Track loading state
+  console.log(formError);
 
   const router = useRouter();
 
@@ -67,8 +83,6 @@ const LoginForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    console.log("hii");
 
     const validityChecker = signInSchema.safeParse(formData);
     if (!validityChecker.success) {
@@ -77,8 +91,11 @@ const LoginForm: React.FC = () => {
         formatedError[issue.path[0]] = issue.message;
       });
       setFormError(formatedError);
+
       return;
     }
+    setIsLoading(true);
+
     const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
     const isSuccess = await fetch(`${BASE_URL}/api/authentication/login`, {
       method: "POST",
@@ -99,55 +116,67 @@ const LoginForm: React.FC = () => {
   return (
     <div className="bg-slate-400 bg-opacity-50 w-full rounded-3xl mt-28">
       {isLoading && <LoadingScreen />}
-      <p className="text text-2xl text-gray-100 text-center pt-20">
+      <p className="text text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-gray-100 text-center pt-20">
         LOG INTO YOUR ACCOUNT
       </p>
       <form>
         <div className="mt-20">
-          <div className="relative w-full mx-3">
-            {formError.email && (
-              <p className="-ml-4 text-red-700 font-semibold">
-                {formError.email}
-              </p>
-            )}
-            {!state.activeFields["email"] && formData.email.length === 0 && (
-              <p className="absolute -z-50 text-xl bottom-2 text-gray-200">
-                Your Email
-              </p>
-            )}
-            <input
-              className="loginInput"
-              id="email"
-              type="text"
-              name="email"
-              onChange={handleChange}
-              onFocus={() => handleFocus("email")}
-              onBlur={(e) => handleBlur("email", e.target.value)}
-            />
+          <div className="relative w-full mx-3 flex flex-col justify-start">
+            <div>
+              {!state.activeFields["email"] && formData.email.length === 0 && (
+                <p className="absolute z-10 text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl bottom-8 text-gray-100 pointer-events-none ">
+                  Your Email
+                </p>
+              )}
+            </div>
+            <div>
+              <input
+                className="loginInput"
+                id="email"
+                type="text"
+                name="email"
+                onChange={handleChange}
+                onFocus={() => handleFocus("email")}
+                onBlur={(e) => handleBlur("email", e.target.value)}
+              />
+            </div>
+            <div>
+              {formError.email && (
+                <p className="ml-1 text-red-700 font-semibold">
+                  {formError.email}
+                </p>
+              )}
+            </div>
           </div>
-          <div className="relative w-full mx-3 mt-24">
-            {formError.password && (
-              <p className="-ml-4 text-red-700 font-semibold">
-                {formError.password}
-              </p>
-            )}
-            {!state.activeFields["password"] && (
-              <p className="absolute -z-50  text-xl bottom-2 text-gray-200">
-                Your Password
-              </p>
-            )}
-            <input
-              className="loginInput"
-              id="password"
-              type="password"
-              name="password"
-              onChange={handleChange}
-              onFocus={() => handleFocus("password")}
-              onBlur={(e) => handleBlur("password", e.target.value)}
-            />
+          <div className="relative w-full mx-3 mt-24 flrx flex-col">
+            <div>
+              {!state.activeFields["password"] && (
+                <p className="absolute z-10  text-sm sm:text-base md:text-lg lg:text-xl  bottom-8 text-gray-100 pointer-events-none">
+                  Your Password
+                </p>
+              )}
+            </div>
+            <div>
+              <input
+                className="loginInput"
+                id="password"
+                type="password"
+                name="password"
+                onChange={handleChange}
+                onFocus={() => handleFocus("password")}
+                onBlur={(e) => handleBlur("password", e.target.value)}
+              />
+            </div>
+            <div className="ml-5">
+              {formError.password && (
+                <p className="-ml-4 text-red-700 font-semibold">
+                  {formError.password}
+                </p>
+              )}
+            </div>
           </div>
         </div>
-        <div className="text-gray-200 text-xl flex justify-around mt-28 pb-12 mx-4">
+        <div className="text-gray-200 text-sm sm:text-base md:text-lg lg:text-xl flex justify-around mt-10 sm:mt-16 md:mt-20 lg:mt-28 pb-12 mx-4">
           <button type="button" onClick={handleSubmit}>
             Login
           </button>

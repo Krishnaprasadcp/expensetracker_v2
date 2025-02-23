@@ -36,15 +36,17 @@ export async function POST(req: Request) {
     }
 
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, {
-      expiresIn: Number(process.env.JWT_EXPIRES_IN) || 900,
+      expiresIn: Number(process.env.JWT_EXPIRES_IN),
     });
+    console.log(process.env.JWT_COOKIE_EXPIRES_IN);
+    const expiryDate = new Date();
 
     // ✅ Set Cookie Properly
     (await cookies()).set("jwt", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: 15 * 60, // 15 minutes
+      maxAge: Number(process.env.JWT_COOKIE_EXPIRES_IN),
     });
 
     return NextResponse.json(

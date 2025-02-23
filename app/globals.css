@@ -9,7 +9,7 @@
 
 /* Main Navbar section */
 .topnavbar {
-  @apply text-xl text-gray-200;
+  @apply text-sm md:text-lg lg:text-xl xl:text-2xl text-gray-200 grid grid-flow-col gap-4 md:gap-7 lg:gap-10 xl:gap-14;
 }
 
 .addexpenseinput {

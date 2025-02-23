@@ -9,7 +9,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-svg-background bg-cover bg-no-repeat">
+      <body className="bg-svg-background bg-cover bg-no-repeat min-h-screen">
         <StoreProvider>
           <nav className="">
             <LayoutThing />

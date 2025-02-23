@@ -1,33 +1,16 @@
 "use client";
 import LoginForm from "@/components/Login/LoginForm";
-import { useEffect } from "react";
-
 export default function Login() {
-  useEffect(() => {
-    const isValidUser = async () => {
-      try {
-        // const res = await fetch(
-        //   `${process.env.NEXT_PUBLIC_BASE_URL}/api/authentication/protectedRoute`,
-        //   { credentials: "include" }
-        // );
-        // const data = await res.json();
-        // console.log(data);
-      } catch (error) {
-        console.error("Failed to refresh token", error);
-      }
-    };
-    isValidUser();
-  }, []);
   return (
-    <div className="flex justify-around w-11/12 mx-16 ">
-      <div className="w-1/3">
+    <div className="flex flex-col items-center sm:flex-row w-11/12 mx-auto sm:mx-16 ">
+      <div className="w-2/3 sm:w-1/2 lg:w-2/5 xl:w-2/6 2xl:w-3/12 xl:ml-52">
         <LoginForm />
       </div>
-      <div className="w-1/3 mt-24">
+      <div className="w-3/4 sm:w-1/3 md:w-2/5 lg:w-2/5 xl:w-2/6 mt-12 sm:mt-24 sm:ml-9 lg:ml-16 xl:ml-32">
         <img
           src="/images/signinimage.png"
           alt="login image"
-          className="mt-24 w-full object-cover"
+          className=" w-full object-cover bg-center"
         />
       </div>
     </div>

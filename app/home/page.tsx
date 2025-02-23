@@ -1,7 +1,9 @@
+"use client";
+import ProtectedRouteComponent from "@/components/ProtectedRoute";
 import React from "react";
-const Home: React.FC = async () => {
+const Home: React.FC = () => {
   return (
-    <>
+    <ProtectedRouteComponent>
       <div>
         <div className="mt-16 mx-8 flex justify-between">
           <p className="ml-5 text-5xl text-gray-200">WELCOME KRISHNAPRASAD!</p>
@@ -38,7 +40,7 @@ const Home: React.FC = async () => {
           </div>
         </div>
       </div>
-    </>
+    </ProtectedRouteComponent>
   );
 };
 export default Home;
