@@ -1,34 +1,7 @@
 "use client";
+import { SignUpFormSubmissionAction } from "@/app/actions/SignupFormSubmission";
 import { useReducer, useRef, useState } from "react";
-
-interface INITIALARGS {
-  firstName: boolean;
-  secondName: boolean;
-  dateOfBirth: boolean;
-  email: boolean;
-  password: boolean;
-  rePassword: boolean;
-  address: boolean;
-  phoneNumber: boolean;
-  genderSelection: string;
-  gender: boolean;
-}
-interface Action {
-  type: string;
-  gender?: string;
-}
-const initialArgs: INITIALARGS = {
-  firstName: true,
-  secondName: true,
-  dateOfBirth: true,
-  email: true,
-  password: true,
-  rePassword: true,
-  address: true,
-  phoneNumber: true,
-  genderSelection: "",
-  gender: true,
-};
+import { z } from "zod";
 
 interface MonthlyExpense {
   category: string;
@@ -36,46 +9,68 @@ interface MonthlyExpense {
   date: string;
 }
 
-function reducer(state: INITIALARGS, action: Action) {
+type State = {
+  activeFields: Record<string, boolean>;
+};
+
+type Action =
+  | { type: "SET_ACTIVE_FIELD"; field: string }
+  | { type: "REMOVE_ACTIVE_FIELD"; field: string };
+
+const initialArgs: State = {
+  activeFields: {},
+};
+
+const signUpSchema = z
+  .object({
+    firstName: z
+      .string()
+      .min(3, { message: "Firstname must be at least 3 characters" }),
+    secondName: z.string().min(2, {
+      message: "Second name must contain at least 2 characters",
+    }),
+    email: z.string().email({ message: "Invalid format of email" }),
+    password: z
+      .string()
+      .min(6, { message: "Password must contain at least 6 characters" })
+      .regex(/[A-Z]/, {
+        message: "Must contain at least one uppercase letter",
+      })
+      .regex(/[a-z]/, {
+        message: "Must contain at least one lowercase letter",
+      })
+      .regex(/[0-9]/, { message: "Must contain at least one number" })
+      .regex(/[\W_]/, {
+        message: "Must contain at least one special character",
+      }),
+    rePassword: z.string(),
+    phoneNumber: z
+      .string()
+      .min(10, { message: "Phone Number must contain 10 digits" })
+      .max(10, { message: "Phone number should not exceed 10 digits" }),
+  })
+  .superRefine((data, ctx) => {
+    if (data.password !== data.rePassword) {
+      ctx.addIssue({
+        path: ["rePassword"],
+        message: "Passwords do not match",
+        code: z.ZodIssueCode.custom,
+      });
+    }
+  });
+
+function reducer(state: State, action: Action) {
   switch (action.type) {
-    case "firstName":
-      return { ...state, firstName: false };
-    case "removeFirstName":
-      return { ...state, firstName: true };
-    case "secondName":
-      return { ...state, secondName: false };
-    case "removeSecondName":
-      return { ...state, secondName: true };
-    case "dateofbirth":
-      return { ...state, dateOfBirth: false };
-    case "removeDateOfBirth":
-      return { ...state, dateOfBirth: true };
-    case "email":
-      return { ...state, email: false };
-    case "removeEmail":
-      return { ...state, email: true };
-    case "password":
-      return { ...state, password: false };
-    case "removePassword":
-      return { ...state, password: true };
-    case "rePassword":
-      return { ...state, rePassword: false };
-    case "removeRePassword":
-      return { ...state, rePassword: true };
-    case "address":
-      return { ...state, address: false };
-    case "removeAddress":
-      return { ...state, address: true };
-    case "phoneNumber":
-      return { ...state, phoneNumber: false };
-    case "removePhoneNumber":
-      return { ...state, phoneNumber: true };
-    case "genderSelection":
-      return { ...state, genderSelection: action.gender! };
-    case "gender":
-      return { ...state, gender: false };
-    case "removeGender":
-      return { ...state, gender: true };
+    case "SET_ACTIVE_FIELD":
+      return {
+        ...state,
+        activeFields: { ...state.activeFields, [action.field]: true },
+      };
+    case "REMOVE_ACTIVE_FIELD":
+      return {
+        ...state,
+        activeFields: { ...state.activeFields, [action.field]: false },
+      };
     default:
       return state;
   }
@@ -83,108 +78,52 @@ function reducer(state: INITIALARGS, action: Action) {
 
 const SignupForm = () => {
   const [state, dispatch] = useReducer(reducer, initialArgs);
-  const [nextSigninForm, setNextSigninForm] = useState(false); //set it to false after all done
+  const [nextSigninForm, setNextSigninForm] = useState(false);
   const [monthlyExpenseForm, setMonthlyExpenseForm] = useState(false);
   const [monthlyExpenseDatas, setMonthlyExpenseData] = useState<
     MonthlyExpense[]
   >([]);
-  //Signup Form
-  const firstNameInput = useRef<HTMLInputElement>(null);
-  const secondNameInput = useRef<HTMLInputElement>(null);
-  const dobInput = useRef<HTMLInputElement>(null);
-  const emailInput = useRef<HTMLInputElement>(null);
-  const passwordInput = useRef<HTMLInputElement>(null);
-  const rePasswordInput = useRef<HTMLInputElement>(null);
-  const addressInput = useRef<HTMLInputElement>(null);
-  const phoneNumberInput = useRef<HTMLInputElement>(null);
+  const [formError, setFormError] = useState<Record<string, string>>({});
+  const [formData, setFormData] = useState({
+    firstName: "",
+    secondName: "",
+    email: "",
+    password: "",
+    rePassword: "",
+    phoneNumber: "",
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleFocus = (field: string) => {
+    dispatch({ type: "SET_ACTIVE_FIELD", field });
+  };
+
+  const handleBlur = (field: string, value: string) => {
+    if (!value) {
+      dispatch({ type: "REMOVE_ACTIVE_FIELD", field });
+    }
+  };
 
   //Intial monthly expense
   const categoryInput = useRef<HTMLInputElement>(null);
   const priceInput = useRef<HTMLInputElement>(null);
   const monthlyDateInput = useRef<HTMLInputElement>(null);
 
-  const firstNameFocusHandler = () => {
-    dispatch({ type: "firstName" });
-  };
-  const firstNameBlurHandler = () => {
-    if (firstNameInput.current?.value === "") {
-      dispatch({ type: "removeFirstName" });
-    }
-  };
-
-  const secondNameFocusHandler = () => {
-    dispatch({ type: "secondName" });
-  };
-  const secondNameBlurHandler = () => {
-    if (secondNameInput.current?.value === "") {
-      dispatch({ type: "removeSecondName" });
-    }
-  };
-  const dobFocusHandler = () => {
-    dispatch({ type: "dateofbirth" });
-  };
-  const dobBlurHandler = () => {
-    if (dobInput.current?.value === "") {
-      dispatch({ type: "removeDateOfBirth" });
-    }
-  };
-
-  const emailFocusHandler = () => {
-    dispatch({ type: "email" });
-  };
-  const emailBlurHandler = () => {
-    if (emailInput.current?.value === "") {
-      dispatch({ type: "removeEmail" });
-    }
-  };
-
-  const addressFocusHandler = () => {
-    dispatch({ type: "address" });
-  };
-  const addressBlurHandler = () => {
-    if (addressInput.current?.value === "") {
-      dispatch({ type: "removeAddress" });
-    }
-  };
-
-  const phoneNumberFocusHandler = () => {
-    dispatch({ type: "phoneNumber" });
-  };
-  const phoneNumberBlurHandler = () => {
-    if (phoneNumberInput.current?.value === "") {
-      dispatch({ type: "removePhoneNumber" });
-    }
-  };
-
-  const passwordFocusHandler = () => {
-    dispatch({ type: "password" });
-  };
-
-  const passwordBlurHandler = () => {
-    if (passwordInput.current?.value === "") {
-      dispatch({ type: "removePassword" });
-    }
-  };
-  const rePasswordFocusHandler = () => {
-    dispatch({ type: "rePassword" });
-  };
-  const rePasswordBlurHandler = () => {
-    if (rePasswordInput.current?.value === "") {
-      dispatch({ type: "removeRePassword" });
-    }
-  };
-
-  const genderSelctionFocusHandler = () => {
-    dispatch({ type: "gender" });
-  };
-
-  const genderSelectionBlurHandler = () => {
-    if (state.genderSelection === "") {
-      dispatch({ type: "removeGender" });
-    }
-  };
-
   const nextButtonHandler = () => {
+    const validityChecker = signUpSchema.safeParse(formData);
+    if (!validityChecker.success) {
+      console.log(validityChecker.error.message);
+      const formatedError: Record<string, string> = {};
+      validityChecker.error.issues.forEach((issue) => {
+        formatedError[issue.path[0]] = issue.message;
+      });
+      setFormError(formatedError);
+      return;
+    }
+    setFormError({});
     setNextSigninForm(true);
   };
 
@@ -205,10 +144,16 @@ const SignupForm = () => {
       date: monthlyDateInput.current!.value,
     };
     const monthlyExpenseData = [...monthlyExpenseDatas, monthlyExpense];
-    console.log(monthlyExpense);
     setMonthlyExpenseData(monthlyExpenseData);
   };
-  console.log(monthlyExpenseDatas);
+
+  const handleSignupButtonHandler = async () => {
+    const response = await SignUpFormSubmissionAction({
+      monthlyExpenseDatas,
+      formData,
+    });
+    console.log(response);
+  };
 
   return (
     <>
@@ -220,147 +165,148 @@ const SignupForm = () => {
             <form className="w-1/3 bg-slate-500 opacity-80 rounded-2xl mb-8">
               <p className="text-gray-200 text-xl">Enter your details:</p>
               <div className="relative  mx-3 mt-10">
-                {state.firstName && (
-                  <p className="signupinputelementlabel">Your first name</p>
+                {formError.firstName && (
+                  <p className="-ml-4 text-red-700 font-semibold">
+                    {formError.firstName}
+                  </p>
                 )}
+                {!state.activeFields["firstName"] &&
+                  formData.firstName.length === 0 && (
+                    <p className="signupinputelementlabel">Your first name</p>
+                  )}
 
                 <input
                   className="loginInput "
                   id="firstName"
                   type="text"
-                  onFocus={firstNameFocusHandler}
-                  onBlur={firstNameBlurHandler}
-                  ref={firstNameInput}
+                  required
+                  name="firstName"
+                  onChange={handleChange}
+                  value={formData.firstName}
+                  onFocus={() => handleFocus("firstName")}
+                  onBlur={(e) => handleBlur("firstName", e.target.value)}
                 />
               </div>
               <div className="relative  mx-3 mt-10">
-                {state.secondName && (
-                  <p className="signupinputelementlabel">Your second name</p>
+                {formError.secondName && (
+                  <p className="-ml-4 text-red-700 font-semibold">
+                    {formError.secondName}
+                  </p>
                 )}
+                {!state.activeFields["secondName"] &&
+                  formData.secondName.length === 0 && (
+                    <p className="signupinputelementlabel">Your second name</p>
+                  )}
 
                 <input
                   className="loginInput"
                   id="secondName"
                   type="text"
-                  onFocus={secondNameFocusHandler}
-                  onBlur={secondNameBlurHandler}
-                  ref={secondNameInput}
+                  name="secondName"
+                  required
+                  onChange={handleChange}
+                  value={formData.secondName}
+                  onFocus={() => handleFocus("secondName")}
+                  onBlur={(e) => handleBlur("secondName", e.target.value)}
                 />
               </div>
-              <div className=" flex relative justify-between   mx-8 mt-10 border-4 border-b-gray-200 border-t-0 border-r-0 border-l-0">
-                {state.dateOfBirth && (
-                  <p className="signupinputelementlabel -ml-3">Date of Birth</p>
-                )}
 
-                <input
-                  type="date"
-                  className={` bg-inherit  w-full border-0 border-t-0 ${
-                    state.dateOfBirth
-                      ? "text-gray-500 text-opacity-0"
-                      : "text-gray-200"
-                  } `}
-                  placeholder="Enter a date"
-                  onFocus={dobFocusHandler}
-                  onBlur={dobBlurHandler}
-                  ref={dobInput}
-                />
-              </div>
               <div className="relative  mx-3 mt-10">
-                {state.email && (
-                  <p className="signupinputelementlabel">Your Email</p>
+                {formError.email && (
+                  <p className="-ml-4 text-red-700 font-semibold">
+                    {formError.email}
+                  </p>
                 )}
+                {!state.activeFields["email"] &&
+                  formData.email.length === 0 && (
+                    <p className="signupinputelementlabel">Your Email</p>
+                  )}
 
                 <input
                   className="loginInput"
                   id="email"
                   type="email"
-                  onFocus={emailFocusHandler}
-                  onBlur={emailBlurHandler}
-                  ref={emailInput}
+                  name="email"
+                  required
+                  value={formData.email}
+                  onChange={handleChange}
+                  onFocus={() => handleFocus("email")}
+                  onBlur={(e) => handleBlur("email", e.target.value)}
                 />
               </div>
               <div className="relative  mx-3 mt-10">
-                {state.password && (
-                  <p className="signupinputelementlabel">Enter a password</p>
+                {formError.password && (
+                  <p className="-ml-4 text-red-700 font-semibold">
+                    {formError.password}
+                  </p>
                 )}
+                {!state.activeFields["password"] &&
+                  formData.password.length === 0 && (
+                    <p className="signupinputelementlabel">Enter a password</p>
+                  )}
 
                 <input
                   className="loginInput"
                   id="password"
                   type="password"
-                  onFocus={passwordFocusHandler}
-                  onBlur={passwordBlurHandler}
-                  ref={passwordInput}
+                  name="password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  onFocus={() => handleFocus("password")}
+                  onBlur={(e) => handleBlur("password", e.target.value)}
                 />
               </div>
               <div className="relative  mx-3 mt-10">
-                {state.rePassword && (
-                  <p className="signupinputelementlabel">
-                    Re enter the password
+                {formError.rePassword && (
+                  <p className="-ml-4 text-red-700 font-semibold">
+                    {formError.rePassword}
                   </p>
                 )}
+                {!state.activeFields["rePassword"] &&
+                  formData.rePassword.length === 0 && (
+                    <p className="signupinputelementlabel">
+                      Re enter the password
+                    </p>
+                  )}
 
                 <input
                   className="loginInput"
                   id="repassword"
                   type="text"
-                  onFocus={rePasswordFocusHandler}
-                  onBlur={rePasswordBlurHandler}
-                  ref={rePasswordInput}
+                  name="rePassword"
+                  required
+                  value={formData.rePassword}
+                  onChange={handleChange}
+                  onFocus={() => handleFocus("rePassword")}
+                  onBlur={(e) => handleBlur("rePassword", e.target.value)}
                 />
               </div>
-              <div className="relative  mx-3 mt-10">
-                {state.address && (
-                  <p className="signupinputelementlabel">Address</p>
-                )}
 
-                <input
-                  className="loginInput"
-                  id="address"
-                  type="text"
-                  onFocus={addressFocusHandler}
-                  onBlur={addressBlurHandler}
-                  ref={addressInput}
-                />
-              </div>
               <div className="relative  mx-3 mt-10">
-                {state.phoneNumber && (
-                  <p className="signupinputelementlabel">Your Phone number</p>
+                {formError.phoneNumber && (
+                  <p className="-ml-4 text-red-700 font-semibold">
+                    {formError.phoneNumber}
+                  </p>
                 )}
+                {!state.activeFields["phoneNumber"] &&
+                  formData.phoneNumber.length === 0 && (
+                    <p className="signupinputelementlabel">Your Phone number</p>
+                  )}
 
                 <input
                   className="loginInput"
                   id="phoneNumber"
                   type="tel"
-                  onFocus={phoneNumberFocusHandler}
-                  onBlur={phoneNumberBlurHandler}
-                  ref={phoneNumberInput}
+                  name="phoneNumber"
+                  value={formData.phoneNumber}
+                  required
+                  onChange={handleChange}
+                  onFocus={() => handleFocus("phoneNumber")}
+                  onBlur={(e) => handleBlur("phoneNumber", e.target.value)}
                 />
               </div>
-              <div className="relative  mx-3 mt-10">
-                {state.gender && (
-                  <p className="absolute text-xl bottom-2 left-6 text-gray-100 text-opacity-100">
-                    Your Gender
-                  </p>
-                )}
 
-                <select
-                  name=""
-                  className="loginInput"
-                  onFocus={genderSelctionFocusHandler}
-                  onBlur={genderSelectionBlurHandler}
-                  onChange={(e) => {
-                    dispatch({
-                      type: "genderSelection",
-                      gender: e.target.value,
-                    });
-                  }}
-                >
-                  <option value=""></option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                </select>
-              </div>
               <div className="flex justify-around mt-7 mb-10 text-gray-100 font-bold">
                 <button className="border-2 border-white rounded-full py-1 px-3">
                   Cancel
@@ -399,7 +345,7 @@ const SignupForm = () => {
                   </thead>
                   <tbody className="">
                     {monthlyExpenseDatas.map((data) => (
-                      <tr className="">
+                      <tr className="" key={data.category}>
                         <td>{data.category}</td>
                         <td>{data.amount}</td>
                         <td>{data.date}</td>
@@ -471,7 +417,11 @@ const SignupForm = () => {
                 >
                   Prev
                 </button>
-                <button className="rounded-full py-1 px-4 border-2 border-gray-200 text-gray-50">
+                <button
+                  type="button"
+                  onClick={handleSignupButtonHandler}
+                  className="rounded-full py-1 px-4 border-2 border-gray-200 text-gray-50"
+                >
                   SignUp
                 </button>
               </div>
