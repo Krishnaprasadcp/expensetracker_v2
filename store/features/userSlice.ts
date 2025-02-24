@@ -1,19 +1,17 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface initialStateProp {
-  isLogin: Boolean;
   userName: String;
 }
 const initialState: initialStateProp = {
-  isLogin: false,
   userName: "",
 };
 export const userSlice = createSlice({
   name: "user",
   initialState: initialState,
   reducers: {
-    isLogin: (state) => {
-      state.isLogin = true;
+    userData: (state, action: PayloadAction<string>) => {
+      state.userName = action.payload;
     },
   },
 });

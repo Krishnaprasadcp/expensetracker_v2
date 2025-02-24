@@ -1,7 +1,8 @@
 "use client";
 import LayoutThing from "@/components/LayoutThing";
 import "./globals.css";
-import StoreProvider from "./storeProvider";
+import { Provider } from "react-redux";
+import { store } from "@/store/store";
 export default function RootLayout({
   children,
 }: {
@@ -10,12 +11,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-svg-background bg-cover bg-no-repeat min-h-screen">
-        <StoreProvider>
+        <Provider store={store}>
           <nav className="">
             <LayoutThing />
           </nav>
           {children}
-        </StoreProvider>
+        </Provider>
       </body>
     </html>
   );

@@ -64,7 +64,6 @@ const LoginForm: React.FC = () => {
   const [state, dispatch] = useReducer(reducer, initialArgs);
   const [formError, setFormError] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false); // Track loading state
-  console.log(formError);
 
   const router = useRouter();
 
@@ -105,8 +104,10 @@ const LoginForm: React.FC = () => {
       },
       body: JSON.stringify(formData),
     });
+    const userData = await isSuccess.json();
+    console.log(userData);
 
-    if (isSuccess) {
+    if (isSuccess.ok) {
       router.push("/home");
       setIsLoading(false);
     }

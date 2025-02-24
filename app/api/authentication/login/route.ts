@@ -9,10 +9,6 @@ interface CredProp {
   email: string;
   password: string;
 }
-export async function GET() {
-  console.log("hiii");
-}
-
 export async function POST(req: Request) {
   try {
     const bodyData: CredProp = await req.json();
@@ -38,7 +34,6 @@ export async function POST(req: Request) {
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, {
       expiresIn: Number(process.env.JWT_EXPIRES_IN),
     });
-    console.log(process.env.JWT_COOKIE_EXPIRES_IN);
     const expiryDate = new Date();
 
     // ✅ Set Cookie Properly
@@ -50,7 +45,7 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(
-      { status: "success", user: { id: user.id } },
+      { status: "success", user: user.id },
       { status: 200 }
     );
   } catch (error) {

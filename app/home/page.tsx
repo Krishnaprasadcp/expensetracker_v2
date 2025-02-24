@@ -1,7 +1,20 @@
 "use client";
 import ProtectedRouteComponent from "@/components/ProtectedRoute";
-import React from "react";
+import React, { useEffect } from "react";
 const Home: React.FC = () => {
+  useEffect(() => {
+    async function fetchBaseQuery() {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/user/67b4a6b93ae993c47f8b43d4`
+      );
+      if (!response.ok) {
+        console.log("No valid user");
+      }
+      const data = await response.json();
+      console.log(data);
+    }
+    fetchBaseQuery();
+  }, []);
   return (
     <ProtectedRouteComponent>
       <div>
