@@ -4,13 +4,12 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
-    const id = await params.id;
+    const id = params.id;
     console.log(id);
-
-    console.log("hiii");
 
     const tokenValidator = await TokenValidator();
     if (!tokenValidator.success) {
