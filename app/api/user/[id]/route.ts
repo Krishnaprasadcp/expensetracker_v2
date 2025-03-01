@@ -1,6 +1,7 @@
 import { connectDB } from "@/libs/database/mongo";
 import { TokenValidator } from "../../utils/tokenValidator";
 import { NextResponse } from "next/server";
+import USER from "@/libs/database/models/userSchema";
 
 export async function GET(
   req: Request,
@@ -18,7 +19,12 @@ export async function GET(
     // console.log(tokenValidator.data);
 
     await connectDB();
-    return NextResponse.json({ message: "ok" }, { status: 200 });
+    const user = await USER.findById(id);
+    if (!user) {
+      return NextResponse.json({ message: "No valid user" }, { status: 404 });
+    }
+
+    return NextResponse.json({ message: "ok", user }, { status: 200 });
   } catch (error) {
     return NextResponse.json(
       { message: "Internal Server Error" },

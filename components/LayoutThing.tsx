@@ -3,12 +3,9 @@ import { useAppSelector } from "@/store/hooks";
 import Link from "next/link";
 import React, { useState } from "react";
 function LayoutThing() {
-  const isLoginValue = useAppSelector((state) => state.user.isLogin);
-  console.log(isLoginValue);
+  // const isLoginValue = useAppSelector((state) => state.user.isLogin);
+  // console.log(isLoginValue);
 
-  const [time, setTime] = useState(() =>
-    typeof window !== "undefined" ? new Date() : null
-  );
   const [isLoggin, setIsLoggin] = useState(true);
   const logoutHandler = () => {
     setIsLoggin(false);
