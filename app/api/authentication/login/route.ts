@@ -14,7 +14,9 @@ export async function POST(req: Request) {
     const bodyData: CredProp = await req.json();
     await connectDB();
 
-    const user = await USER.findOne({ email: bodyData.email });
+    const user = await USER.findOne({ email: bodyData.email }).select(
+      "+password"
+    );
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 400 });
     }
@@ -44,8 +46,11 @@ export async function POST(req: Request) {
       maxAge: Number(process.env.JWT_COOKIE_EXPIRES_IN),
     });
 
+    const userObject = user.toObject();
+    delete userObject.password;
+
     return NextResponse.json(
-      { status: "success", user: user.id },
+      { status: "success", user: userObject },
       { status: 200 }
     );
   } catch (error) {

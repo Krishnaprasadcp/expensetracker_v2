@@ -1,19 +1,18 @@
 "use client";
-import { useAppSelector } from "@/store/hooks";
+import { userSliceActions } from "@/store/features/userSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import Link from "next/link";
-import React, { useState } from "react";
+import React from "react";
 function LayoutThing() {
-  // const isLoginValue = useAppSelector((state) => state.user.isLogin);
-  // console.log(isLoginValue);
-
-  const [isLoggin, setIsLoggin] = useState(true);
+  const isLoginValue = useAppSelector((state) => state.user.isLogin);
+  const dispatch = useAppDispatch();
   const logoutHandler = () => {
-    setIsLoggin(false);
+    dispatch(userSliceActions.setIsLogin(false));
   };
   return (
     <>
       <div className="flex justify-between mx-8 mt-4">
-        {!isLoggin && (
+        {!isLoginValue && (
           <nav className="topnavbar">
             <Link className="mr-8" href={"#"}>
               SignIn
@@ -21,7 +20,7 @@ function LayoutThing() {
             <Link href={"#"}>SignUp</Link>
           </nav>
         )}
-        {isLoggin && (
+        {isLoginValue && (
           <nav className="topnavbar ">
             <Link href="/home">Home</Link>
             <Link href="/home/expenses">Expenses</Link>

@@ -1,33 +1,16 @@
 "use client";
-import ProtectedRouteComponent from "@/components/ProtectedRoute";
 import { useAppSelector } from "@/store/hooks";
-import React, { useEffect, useState } from "react";
+import React from "react";
 
 const Home: React.FC = () => {
-  const userID = useAppSelector((state) => state.user.userID);
-  const [userData, setUserData] = useState<{ firstName?: string } | null>(null);
-  useEffect(() => {
-    if (!userID) return;
-    async function fetchBaseQuery() {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/user/${userID}`
-      );
-      if (!response.ok) {
-        console.log("No valid user");
-      }
-      const data = await response.json();
-      setUserData(data.user);
-    }
-    fetchBaseQuery();
-  }, [userID]);
-
+  const userDatas = useAppSelector((state) => state.user.user);
   return (
-    <ProtectedRouteComponent>
-      {userData && (
+    <>
+      {userDatas && (
         <div>
           <div className="mt-16 mx-8 flex justify-between">
             <p className="ml-5 text-5xl text-gray-200">
-              {`Welcome ${userData.firstName}`}
+              {`Welcome ${userDatas.firstName}`}
             </p>
             <div className="flex items-start mr-8 mt-6">
               <p className="text-2xl text-gray-200 py-14 mr-11">Your Spent:</p>
@@ -63,7 +46,7 @@ const Home: React.FC = () => {
           </div>
         </div>
       )}
-    </ProtectedRouteComponent>
+    </>
   );
 };
 export default Home;

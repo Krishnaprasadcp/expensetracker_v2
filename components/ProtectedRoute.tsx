@@ -7,7 +7,6 @@ interface ProtectedRouteProps {
 const ProtectedRouteComponent: React.FC<ProtectedRouteProps> = ({
   children,
 }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
   useEffect(() => {
     const checkAuth = async () => {
@@ -19,9 +18,7 @@ const ProtectedRouteComponent: React.FC<ProtectedRouteProps> = ({
         const data = await response.json();
 
         if (response.ok && data.message) {
-          setIsAuthenticated(true);
         } else {
-          setIsAuthenticated(false);
           router.push("/");
         }
       } catch (error) {}

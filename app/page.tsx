@@ -1,6 +1,19 @@
 "use client";
 import LoginForm from "@/components/Login/LoginForm";
+import { useAppSelector } from "@/store/hooks";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 export default function Login() {
+  const isLogin = useAppSelector((state) => state.user.isLogin);
+  const router = useRouter();
+  useEffect(() => {
+    function checkIsLogin() {
+      if (isLogin) {
+        router.push("/home");
+      }
+    }
+    checkIsLogin();
+  }, [isLogin]);
   return (
     <div className="flex flex-col items-center sm:flex-row w-11/12 mx-auto sm:mx-16 ">
       <div className="w-2/3 sm:w-1/2 lg:w-2/5 xl:w-2/6 2xl:w-3/12 xl:ml-52">
