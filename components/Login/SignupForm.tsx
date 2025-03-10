@@ -1,7 +1,8 @@
 "use client";
-import { SignUpFormSubmissionAction } from "@/app/actions/SignupFormSubmission";
-import { useReducer, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { FormEvent, useReducer, useRef, useState } from "react";
 import { z } from "zod";
+import { useSetupUser } from "../utils/setupUser";
 
 interface MonthlyExpense {
   category: string;
@@ -20,6 +21,25 @@ type Action =
 const initialArgs: State = {
   activeFields: {},
 };
+
+interface MonthlyDataObject {
+  category: string;
+  amount: string;
+  date: string;
+}
+interface FormDataObject {
+  firstName: string;
+  secondName: string;
+  email: string;
+  password: string;
+  rePassword: string;
+  phoneNumber: string;
+}
+
+interface DataType {
+  monthlyExpenseDatas: MonthlyDataObject[];
+  formData: FormDataObject;
+}
 
 const signUpSchema = z
   .object({
@@ -92,7 +112,8 @@ const SignupForm = () => {
     rePassword: "",
     phoneNumber: "",
   });
-
+  const router = useRouter();
+  const setupUser = useSetupUser();
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -147,12 +168,30 @@ const SignupForm = () => {
     setMonthlyExpenseData(monthlyExpenseData);
   };
 
-  const handleSignupButtonHandler = async () => {
-    const response = await SignUpFormSubmissionAction({
+  const handleSignupButtonHandler = async (e: FormEvent) => {
+    e.preventDefault();
+    const data = {
       monthlyExpenseDatas,
       formData,
-    });
-    console.log(response);
+    };
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/authentication/signup`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      }
+    );
+    const responseData = await response.json();
+    console.log(responseData);
+
+    if (!response.ok) {
+      console.log(responseData);
+    }
+    setupUser(responseData.user, responseData.user._id);
+    router.push("/home");
   };
 
   return (
@@ -324,107 +363,108 @@ const SignupForm = () => {
 
           {nextSigninForm && (
             <div className="bg-slate-600 opacity-70 w-2/3 p-3 rounded-2xl">
-              <div className="flex justify-between text-gray-100 text-xl">
-                <p>ADD YOUR MONTHLY EXPENSE</p>
-                <p>(If you add one click submit)</p>
-              </div>
-              <div>
-                <table className="w-full mt-2">
-                  <thead>
-                    <tr>
-                      <td className="bg-blue-950 rounded-full py-2 px-10">
-                        Category
-                      </td>
-                      <td className="bg-blue-950 rounded-full py-2 px-10">
-                        Amount
-                      </td>
-                      <td className="bg-blue-950 rounded-full py-2 px-10">
-                        Date
-                      </td>
-                    </tr>
-                  </thead>
-                  <tbody className="">
-                    {monthlyExpenseDatas.map((data) => (
-                      <tr className="" key={data.category}>
-                        <td>{data.category}</td>
-                        <td>{data.amount}</td>
-                        <td>{data.date}</td>
+              <form onSubmit={handleSignupButtonHandler}>
+                <div className="flex justify-between text-gray-100 text-xl">
+                  <p>ADD YOUR MONTHLY EXPENSE</p>
+                  <p>(If you add one click submit)</p>
+                </div>
+                <div>
+                  <table className="w-full mt-2">
+                    <thead>
+                      <tr>
+                        <td className="bg-blue-950 rounded-full py-2 px-10">
+                          Category
+                        </td>
+                        <td className="bg-blue-950 rounded-full py-2 px-10">
+                          Amount
+                        </td>
+                        <td className="bg-blue-950 rounded-full py-2 px-10">
+                          Date
+                        </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <div className="mt-5">
+                    </thead>
+                    <tbody className="">
+                      {monthlyExpenseDatas.map((data) => (
+                        <tr className="" key={data.category}>
+                          <td>{data.category}</td>
+                          <td>{data.amount}</td>
+                          <td>{data.date}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="mt-5">
+                    <button
+                      type="button"
+                      onClick={monthlyExpenseFormAddButtonHandler}
+                      className="rounded-full border-4 border-gray-100 py-1 px-16"
+                    >
+                      ADD+
+                    </button>
+                  </div>
+                  {monthlyExpenseForm && (
+                    <div>
+                      <form className="flex flex-col ">
+                        <div className="border-2 border-gray-100 rounded-full w-full py-2 px-7 mt-3">
+                          <input
+                            type="text"
+                            placeholder="Enter your category"
+                            ref={categoryInput}
+                            className=" outline-0  bg-inherit w-full  text-gray-50"
+                          />
+                        </div>
+                        <div className="border-2 border-gray-100 rounded-full w-full py-2 px-7 mt-3">
+                          <input
+                            type="text"
+                            placeholder="Enter the price"
+                            ref={priceInput}
+                            className="outline-0  bg-inherit w-full  text-gray-50"
+                          />
+                        </div>
+                        <div className="border-2 border-gray-100 rounded-full w-full py-2 px-7 mt-3">
+                          <input
+                            type="date"
+                            placeholder="Enter the payment date"
+                            ref={monthlyDateInput}
+                            className="outline-0  bg-inherit w-full  text-gray-50"
+                          />
+                        </div>
+                        <div className="flex justify-around  mx-4 mt-4 text-gray-50 mb-4">
+                          <button
+                            type="button"
+                            onClick={addMonthlyExpense}
+                            className="border-4 border-gray-100 rounded-full py-1 px-4"
+                          >
+                            Submit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={monthlyExpenseFormCancelButtonHandler}
+                            className="border-4 border-gray-100 rounded-full py-1 px-4"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+                </div>
+                <div className="flex justify-between mx-4">
                   <button
+                    className="rounded-full py-1 px-4 border-2 border-gray-200 text-gray-50"
                     type="button"
-                    onClick={monthlyExpenseFormAddButtonHandler}
-                    className="rounded-full border-4 border-gray-100 py-1 px-16"
+                    onClick={prevButtonHandler}
                   >
-                    ADD+
+                    Prev
+                  </button>
+                  <button
+                    type="submit"
+                    className="rounded-full py-1 px-4 border-2 border-gray-200 text-gray-50"
+                  >
+                    SignUp
                   </button>
                 </div>
-                {monthlyExpenseForm && (
-                  <div>
-                    <form className="flex flex-col ">
-                      <div className="border-2 border-gray-100 rounded-full w-full py-2 px-7 mt-3">
-                        <input
-                          type="text"
-                          placeholder="Enter your category"
-                          ref={categoryInput}
-                          className=" outline-0  bg-inherit w-full  text-gray-50"
-                        />
-                      </div>
-                      <div className="border-2 border-gray-100 rounded-full w-full py-2 px-7 mt-3">
-                        <input
-                          type="text"
-                          placeholder="Enter the price"
-                          ref={priceInput}
-                          className="outline-0  bg-inherit w-full  text-gray-50"
-                        />
-                      </div>
-                      <div className="border-2 border-gray-100 rounded-full w-full py-2 px-7 mt-3">
-                        <input
-                          type="date"
-                          placeholder="Enter the payment date"
-                          ref={monthlyDateInput}
-                          className="outline-0  bg-inherit w-full  text-gray-50"
-                        />
-                      </div>
-                      <div className="flex justify-around  mx-4 mt-4 text-gray-50 mb-4">
-                        <button
-                          type="button"
-                          onClick={addMonthlyExpense}
-                          className="border-4 border-gray-100 rounded-full py-1 px-4"
-                        >
-                          Submit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={monthlyExpenseFormCancelButtonHandler}
-                          className="border-4 border-gray-100 rounded-full py-1 px-4"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                )}
-              </div>
-              <div className="flex justify-between mx-4">
-                <button
-                  className="rounded-full py-1 px-4 border-2 border-gray-200 text-gray-50"
-                  type="button"
-                  onClick={prevButtonHandler}
-                >
-                  Prev
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSignupButtonHandler}
-                  className="rounded-full py-1 px-4 border-2 border-gray-200 text-gray-50"
-                >
-                  SignUp
-                </button>
-              </div>
+              </form>
             </div>
           )}
         </div>

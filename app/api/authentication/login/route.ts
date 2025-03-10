@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { verifyPassword } from "../../utils/helperPassword";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
+import { CreateToken } from "../../utils/createToken";
 interface CredProp {
   email: string;
   password: string;
@@ -33,18 +34,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, {
-      expiresIn: Number(process.env.JWT_EXPIRES_IN),
-    });
-    const expiryDate = new Date();
-
-    // ✅ Set Cookie Properly
-    (await cookies()).set("jwt", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: Number(process.env.JWT_COOKIE_EXPIRES_IN),
-    });
+    const token = await CreateToken(user.id);
 
     const userObject = user.toObject();
     delete userObject.password;

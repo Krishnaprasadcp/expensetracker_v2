@@ -3,6 +3,7 @@ import { connectDB } from "@/libs/database/mongo";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { hashPassword } from "../../utils/helperPassword";
+import { CreateToken } from "../../utils/createToken";
 
 const signUpSchema = z.object({
   firstName: z
@@ -53,8 +54,11 @@ export async function POST(req: Request) {
     await connectDB();
     const newUser = new USER(userData);
     await newUser.save();
+
+    const token = await CreateToken(newUser.id);
+
     return NextResponse.json(
-      { message: "Signup successfull", user: parsedData },
+      { message: "Signup successfull", user: newUser },
       { status: 200 }
     );
   } catch (error) {

@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation"; // To navigate after login
 import Link from "next/link";
 import { z } from "zod";
 import LoadingScreen from "../LoadingScreen";
-import { useAppDispatch } from "@/store/hooks";
-import { userSliceActions } from "@/store/features/userSlice";
+import { useSetupUser } from "../utils/setupUser";
 
 const signInSchema = z.object({
   email: z
@@ -59,7 +58,8 @@ function reducer(state: State, action: Action) {
   }
 }
 const LoginForm: React.FC = () => {
-  const storeDispatch = useAppDispatch();
+  const setupUser = useSetupUser();
+
   const [formData, setFormData] = useState<formDataProps>({
     email: "",
     password: "",
@@ -111,10 +111,7 @@ const LoginForm: React.FC = () => {
     console.log(userData);
 
     if (isSuccess.ok) {
-      storeDispatch(userSliceActions.setUserData(userData.user));
-      storeDispatch(userSliceActions.setUserID(userData.user._id));
-
-      storeDispatch(userSliceActions.setIsLogin(true));
+      setupUser(userData.user, userData.user._id);
       router.push("/home");
       setIsLoading(false);
     }

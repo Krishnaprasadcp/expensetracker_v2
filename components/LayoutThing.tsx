@@ -2,12 +2,18 @@
 import { userSliceActions } from "@/store/features/userSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React from "react";
 function LayoutThing() {
   const isLoginValue = useAppSelector((state) => state.user.isLogin);
   const dispatch = useAppDispatch();
-  const logoutHandler = () => {
+  const router = useRouter();
+  const logoutHandler = async () => {
+    await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/authentication/logout`
+    );
     dispatch(userSliceActions.setIsLogin(false));
+    router.push("/");
   };
   return (
     <>
