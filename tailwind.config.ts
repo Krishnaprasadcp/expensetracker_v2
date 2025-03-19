@@ -8,8 +8,17 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      animation: {
+        dropdown: "fadeIn 0.2s ease-out forwards",
+      },
       backgroundImage: {
         "svg-background": "url('/wave.svg')",
+      },
+      keyframes: {
+        fadeIn: {
+          "0%": { opacity: "0", transform: "scale(95%)" },
+          "100%": { opacity: "1", transform: "scale(100%)" },
+        },
       },
     },
   },

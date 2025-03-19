@@ -4,7 +4,7 @@ import React, { ChangeEvent, FormEvent, useState } from "react";
 
 const AddExpense: React.FC = () => {
   const userData = useAppSelector((state) => state.user);
-
+  const [isOpen, setIsOpen] = useState(false);
   const [errors, setErrors] = useState({
     expenseName: "",
     price: "",
@@ -18,12 +18,9 @@ const AddExpense: React.FC = () => {
     category: "",
     date: "",
   });
-
-  // Category options
-  const categoryArray = [
-    { option: "Food", value: "food" },
-    { option: "Grocery", value: "grocery" },
-  ];
+  const handleFocus = () => {
+    setIsOpen(true);
+  };
 
   // Handle input change
   const handleChange = (
@@ -51,6 +48,9 @@ const AddExpense: React.FC = () => {
         ...prevErrors,
         [name]: `${name.replace(/([A-Z])/g, " $1")} is required`,
       }));
+    }
+    if (name === "category") {
+      setTimeout(() => setIsOpen(false), 200); // Delay to allow clicking dropdown options
     }
   };
 
@@ -139,23 +139,22 @@ const AddExpense: React.FC = () => {
                     </div>
 
                     {/* Category */}
-                    <div>
-                      <select
+                    <div className="relative text-blue-50">
+                      <input
+                        type="text"
                         name="category"
-                        className="addexpenseinput p-1"
-                        value={expenseData.category}
+                        className="addexpenseinput"
                         onChange={handleChange}
                         onBlur={handleBlur}
-                      >
-                        <option value="" disabled>
-                          Select a category
-                        </option>
-                        {categoryArray.map(({ option, value }) => (
-                          <option key={value} value={value}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
+                        onFocus={handleFocus}
+                      />
+                      {isOpen && (
+                        <div className="absolute bg-blue-950 w-full text-center py-2 rounded-xl">
+                          {userData.user.categories.map(({ option, value }) => (
+                            <p key={value}>{option}</p>
+                          ))}
+                        </div>
+                      )}
                       {errors.category && (
                         <p className="text-red-500">{errors.category}</p>
                       )}

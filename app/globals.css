@@ -25,3 +25,8 @@
 .signupinputelementlabel {
   @apply absolute -z-50 text-xl bottom-2 left-6 text-gray-100 text-opacity-100;
 }
+
+/* Settings */
+/* .settingsAnimation {
+  @apply transition-all ;
+} */

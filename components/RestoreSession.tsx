@@ -3,10 +3,11 @@ import { useAppDispatch } from "@/store/hooks";
 import { useEffect } from "react";
 import { userSliceActions } from "@/store/features/userSlice";
 import { TokenValidator } from "@/app/api/utils/tokenValidator";
+import { useSetupUser } from "./utils/setupUser";
 
 export default function RestoreSession() {
   const dispatch = useAppDispatch();
-
+  const setupUser = useSetupUser();
   useEffect(() => {
     let isMounted = true; // ✅ Prevents state updates if unmounted
 
@@ -22,9 +23,8 @@ export default function RestoreSession() {
             `${process.env.NEXT_PUBLIC_BASE_URL}/api/user/${cookieData.token.id}`
           );
           const data = await response.json();
-          dispatch(userSliceActions.setUserData(data.user));
-          dispatch(userSliceActions.setUserID(cookieData.token.id));
-          dispatch(userSliceActions.setIsLogin(true));
+
+          setupUser(data.user, data.user._id);
         }
       } catch (error) {
         console.error("Error fetching user ID:", error);

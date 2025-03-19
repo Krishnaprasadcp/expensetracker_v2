@@ -1,10 +1,15 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+interface CATEGORY {
+  option: string;
+  value: string;
+}
 interface USER {
   firstName: string;
   secondName: string;
   email: string;
   phoneNumber: string;
+  categories: CATEGORY[];
 }
 interface initialStateProp {
   userID: String;
@@ -19,6 +24,7 @@ const initialState: initialStateProp = {
     secondName: "",
     email: "",
     phoneNumber: "",
+    categories: [],
   },
 };
 export const userSlice = createSlice({

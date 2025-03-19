@@ -10,7 +10,14 @@ export async function TokenValidator() {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
+      id: string;
+    };
+    await connectDB();
+    const user = await USER.findById(decoded.id);
+    if (!user) {
+      return { success: false, message: "User not found" };
+    }
     return { success: true, data: decoded };
   } catch (error: any) {
     if (error.name === "TokenExpiredError") {
@@ -19,8 +26,6 @@ export async function TokenValidator() {
       if (!decoded) {
         return { success: false, message: "Invalid token" };
       }
-
-      await connectDB();
       const user = await USER.findById(decoded.id);
       if (!user) {
         return { success: false, message: "User not found" };
