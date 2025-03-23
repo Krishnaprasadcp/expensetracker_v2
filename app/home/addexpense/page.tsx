@@ -21,7 +21,13 @@ const AddExpense: React.FC = () => {
   const handleFocus = () => {
     setIsOpen(true);
   };
-
+  const handleCategorySelect = (selectedCategory: string) => {
+    setExpenseData((prevData) => ({
+      ...prevData,
+      category: selectedCategory,
+    }));
+    setIsOpen(false); // Close dropdown after selection
+  };
   // Handle input change
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -144,15 +150,30 @@ const AddExpense: React.FC = () => {
                         type="text"
                         name="category"
                         className="addexpenseinput"
+                        placeholder="Enter your category"
+                        autoComplete="off"
                         onChange={handleChange}
                         onBlur={handleBlur}
                         onFocus={handleFocus}
+                        value={expenseData.category}
                       />
                       {isOpen && (
                         <div className="absolute bg-blue-950 w-full text-center py-2 rounded-xl">
-                          {userData.user.categories.map(({ option, value }) => (
-                            <p key={value}>{option}</p>
-                          ))}
+                          {userData.user.categories
+                            .filter(({ option }) =>
+                              option
+                                .toLowerCase()
+                                .includes(expenseData.category.toLowerCase())
+                            )
+                            .map(({ option, value }) => (
+                              <p
+                                className="hover:bg-gray-400 cursor-pointer p-1"
+                                key={value}
+                                onMouseDown={() => handleCategorySelect(option)} // Prevents blur issue
+                              >
+                                {option}
+                              </p>
+                            ))}
                         </div>
                       )}
                       {errors.category && (

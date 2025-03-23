@@ -21,7 +21,11 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-    await connectDB();
+
+    (data.category =
+      data.category.trim().charAt(0).toUpperCase() +
+      data.category.trim().slice(1).toLowerCase()),
+      await connectDB();
     const newExpense = new EXPENSES(data);
     await newExpense.save();
     return NextResponse.json({ message: "Data recieved" }, { status: 200 });

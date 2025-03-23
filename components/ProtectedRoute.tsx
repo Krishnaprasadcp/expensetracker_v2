@@ -1,4 +1,4 @@
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 
 interface ProtectedRouteProps {
@@ -8,6 +8,7 @@ const ProtectedRouteComponent: React.FC<ProtectedRouteProps> = ({
   children,
 }) => {
   const router = useRouter();
+  const pathname = usePathname();
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -24,7 +25,7 @@ const ProtectedRouteComponent: React.FC<ProtectedRouteProps> = ({
       } catch (error) {}
     };
     checkAuth();
-  }, [router]);
+  }, [router, pathname]);
 
   return <>{children}</>;
 };

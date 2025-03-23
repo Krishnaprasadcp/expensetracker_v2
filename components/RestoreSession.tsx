@@ -1,8 +1,7 @@
 "use client";
 import { useAppDispatch } from "@/store/hooks";
 import { useEffect } from "react";
-import { userSliceActions } from "@/store/features/userSlice";
-import { TokenValidator } from "@/app/api/utils/tokenValidator";
+
 import { useSetupUser } from "./utils/setupUser";
 
 export default function RestoreSession() {

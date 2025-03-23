@@ -4,6 +4,7 @@ const categorySchema = new mongoose.Schema({
   option: { type: String, required: true },
   value: { type: String, required: true, lowercase: true },
 });
+
 const UserSchema = new mongoose.Schema({
   firstName: String,
   secondName: String,
@@ -23,6 +24,10 @@ const UserSchema = new mongoose.Schema({
       { option: "Bakery", value: "bakery" },
       { option: "Vegitables", value: "vegitables" },
     ],
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
   },
 });
 
