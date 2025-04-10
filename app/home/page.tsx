@@ -56,7 +56,7 @@ const Home: React.FC = () => {
               <p className="text-2xl text-gray-200 py-14 mr-11">Your Spent:</p>
               <div className=" h-44 w-44 grid grid-cols-1 content-center rounded-full  border border-sky-700 border-x-4 border-y-2 text-2xl text-gray-200 text-center">
                 <p className="p-4">
-                  Rs {expenseData?.allExpense[0].totalExpense}
+                  Rs {expenseData?.allExpense[0]?.totalExpense ?? 0}
                 </p>
               </div>
             </div>

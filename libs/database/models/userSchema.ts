@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import INCOME from "./incomeSchema";
+import EXPENSES from "./expenseSchema";
 
 const categorySchema = new mongoose.Schema({
   option: { type: String, required: true },
@@ -30,7 +32,21 @@ const UserSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
+UserSchema.pre(
+  "deleteOne",
+  {
+    document: true,
+    query: false,
+  },
+  async function (next) {
+    const user = this;
+    console.log(user._id);
 
+    await INCOME.deleteMany({ userId: user._id });
+    await EXPENSES.deleteMany({ userId: user._id });
+    next();
+  }
+);
 const USER = mongoose.models.User || mongoose.model("User", UserSchema);
 
 export default USER;

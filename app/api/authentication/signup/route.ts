@@ -4,7 +4,34 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { hashPassword } from "../../utils/helperPassword";
 import { CreateToken } from "../../utils/createToken";
+import EXPENSES from "@/libs/database/models/expenseSchema";
+import INCOME from "@/libs/database/models/incomeSchema";
 
+interface MONTHLYEXPENSE_DATA_OBJECT {
+  category: string;
+  amount: number;
+  date: string;
+  checkBox: boolean;
+}
+interface MONTHLY_INCOME_DATA_OBJECT {
+  incomeName: string;
+  income: number;
+  date: string;
+  checkBox: boolean;
+}
+interface FORM_DATA {
+  firstName: string;
+  secondName: string;
+  email: string;
+  password: string;
+  rePassword: string;
+  phoneNumber: string;
+}
+interface BODYDATA {
+  monthlyExpenseDatas: MONTHLYEXPENSE_DATA_OBJECT[];
+  monthlyIncomeData: MONTHLY_INCOME_DATA_OBJECT[];
+  formData: FORM_DATA;
+}
 const signUpSchema = z.object({
   firstName: z
     .string()
@@ -34,7 +61,7 @@ const signUpSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    const bodyData = await req.json();
+    const bodyData: BODYDATA = await req.json();
     console.log(bodyData);
 
     const parsedData = signUpSchema.safeParse(bodyData.formData);
@@ -54,6 +81,47 @@ export async function POST(req: Request) {
     await connectDB();
     const newUser = new USER(userData);
     await newUser.save();
+    if (bodyData.monthlyExpenseDatas.length > 0) {
+      const newExpense = EXPENSES.insertMany(
+        bodyData.monthlyExpenseDatas.map((expense) => {
+          const expenseDate = new Date(expense.date); // Convert to Date object
+          const nextDueDate = new Date(expenseDate); // Clone the date
+
+          nextDueDate.setMonth(nextDueDate.getMonth() + 1); // Add 1 month
+          return {
+            userId: newUser._id,
+            expenseName: expense.category,
+            category: expense.category,
+            price: expense.amount,
+            type: "monthly",
+            recurrence: { startDate: expenseDate, nextDueDate: nextDueDate },
+          };
+        })
+      );
+    }
+    if (bodyData.monthlyIncomeData.length > 0) {
+      const monthlyIncomeEntries = bodyData.monthlyIncomeData.map((income) => ({
+        name: income.incomeName,
+        income: Number(income.income), // Ensure it's a number
+        dateAdded: new Date(income.date), // Store the correct date
+        addToThisMonth: income.checkBox, // Store checkBox value
+      }));
+
+      // Calculate total income to be added based on checkBox
+      const additionalIncome = bodyData.monthlyIncomeData
+        .filter((income) => income.checkBox) // Only add checked incomes
+        .reduce((sum, income) => sum + Number(income.income), 0);
+
+      // Update Income document
+      await INCOME.findOneAndUpdate(
+        { userId: newUser._id }, // Find by userId
+        {
+          $push: { monthlyIncome: { $each: monthlyIncomeEntries } }, // Append new incomes to the array
+          $inc: { totalIncome: additionalIncome }, // Increment totalIncome dynamically
+        },
+        { upsert: true, new: true }
+      );
+    }
 
     const token = await CreateToken(newUser.id);
 
@@ -69,4 +137,3 @@ export async function POST(req: Request) {
     );
   }
 }
-export async function GET() {}

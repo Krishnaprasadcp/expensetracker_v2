@@ -17,6 +17,15 @@ const expenseSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  type: {
+    type: String,
+    enum: ["daily", "monthly"],
+    required: true,
+  },
+  recurrence: {
+    type: Object,
+    default: null,
+  },
   date: {
     type: Date,
     default: Date.now,

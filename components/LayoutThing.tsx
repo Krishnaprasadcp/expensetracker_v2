@@ -37,10 +37,10 @@ function LayoutThing() {
       <div className="flex justify-between mx-8 mt-4">
         {!isLoginValue && (
           <nav className="topnavbar">
-            <Link className="mr-8" href={"#"}>
+            <Link className="mr-8" href={"/"}>
               SignIn
             </Link>
-            <Link href={"#"}>SignUp</Link>
+            <Link href={"/signup"}>SignUp</Link>
           </nav>
         )}
         {isLoginValue && (

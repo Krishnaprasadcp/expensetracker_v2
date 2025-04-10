@@ -15,6 +15,7 @@ interface Income extends mongoose.Document {
 const IncomeEntrySchema = new mongoose.Schema({
   name: { type: String, required: true },
   income: { type: Number, required: true },
+  addToThisMonth: { type: Boolean, default: true, required: true },
   dateAdded: { type: Date, default: Date.now },
 });
 const IncomeSchema = new mongoose.Schema<Income>({
@@ -26,6 +27,7 @@ const IncomeSchema = new mongoose.Schema<Income>({
     default: 0.0,
   },
 });
+
 IncomeSchema.pre("save", function (next) {
   this.totalIncome =
     (this.monthlyIncome?.reduce((sum, entry) => sum + entry.income, 0) || 0) +

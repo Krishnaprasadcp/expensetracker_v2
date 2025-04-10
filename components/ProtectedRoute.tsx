@@ -4,12 +4,17 @@ import { ReactNode, useEffect, useState } from "react";
 interface ProtectedRouteProps {
   children: ReactNode;
 }
+const PUBLIC_ROUTES = ["/signup", "/login"];
+
 const ProtectedRouteComponent: React.FC<ProtectedRouteProps> = ({
   children,
 }) => {
   const router = useRouter();
   const pathname = usePathname();
   useEffect(() => {
+    if (PUBLIC_ROUTES.includes(pathname)) {
+      return;
+    }
     const checkAuth = async () => {
       try {
         const response = await fetch(

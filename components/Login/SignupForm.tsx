@@ -6,8 +6,9 @@ import { useSetupUser } from "../utils/setupUser";
 
 interface MonthlyExpense {
   category: string;
-  amount: string;
+  amount: number;
   date: string;
+  checkBox: boolean;
 }
 
 type State = {
@@ -26,6 +27,13 @@ interface MonthlyDataObject {
   category: string;
   amount: string;
   date: string;
+  checkBox: boolean;
+}
+interface MonthlyIncomeDataObject {
+  incomeName: string;
+  income: number;
+  date: string;
+  checkBox: boolean;
 }
 interface FormDataObject {
   firstName: string;
@@ -38,6 +46,7 @@ interface FormDataObject {
 
 interface DataType {
   monthlyExpenseDatas: MonthlyDataObject[];
+  monthlyIncomeDatas: MonthlyIncomeDataObject[];
   formData: FormDataObject;
 }
 
@@ -98,11 +107,21 @@ function reducer(state: State, action: Action) {
 
 const SignupForm = () => {
   const [state, dispatch] = useReducer(reducer, initialArgs);
-  const [nextSigninForm, setNextSigninForm] = useState(false);
-  const [monthlyExpenseForm, setMonthlyExpenseForm] = useState(false);
+  const [showForms, setShowForms] = useState({
+    userDetailsForm: true,
+    monthlyExpenseForm: false,
+    monthlyIncomeForm: false,
+    monthlyExpenseFields: false,
+    monthlyIncomeFields: false,
+  });
+  // const [monthlyExpenseForm, setMonthlyExpenseForm] = useState(false);
   const [monthlyExpenseDatas, setMonthlyExpenseData] = useState<
     MonthlyExpense[]
   >([]);
+  const [monthlyIncomeData, setMonthlyIncomeData] = useState<
+    MonthlyIncomeDataObject[]
+  >([]);
+
   const [formError, setFormError] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     firstName: "",
@@ -132,46 +151,112 @@ const SignupForm = () => {
   const categoryInput = useRef<HTMLInputElement>(null);
   const priceInput = useRef<HTMLInputElement>(null);
   const monthlyDateInput = useRef<HTMLInputElement>(null);
+  const addExpenseToCurrentMonth = useRef<HTMLInputElement>(null);
+
+  const incomeNameInput = useRef<HTMLInputElement>(null);
+  const incomeInput = useRef<HTMLInputElement>(null);
+  const incomeDateInput = useRef<HTMLInputElement>(null);
+  const addIncomeToCurrentMonth = useRef<HTMLInputElement>(null);
 
   const nextButtonHandler = () => {
-    const validityChecker = signUpSchema.safeParse(formData);
-    if (!validityChecker.success) {
-      console.log(validityChecker.error.message);
-      const formatedError: Record<string, string> = {};
-      validityChecker.error.issues.forEach((issue) => {
-        formatedError[issue.path[0]] = issue.message;
-      });
-      setFormError(formatedError);
-      return;
-    }
+    // const validityChecker = signUpSchema.safeParse(formData);
+    // if (!validityChecker.success) {
+    //   console.log(validityChecker.error.message);
+    //   const formatedError: Record<string, string> = {};
+    //   validityChecker.error.issues.forEach((issue) => {
+    //     formatedError[issue.path[0]] = issue.message;
+    //   });
+    //   setFormError(formatedError);
+    //   return;
+    // }
     setFormError({});
-    setNextSigninForm(true);
+    setShowForms((prev) => ({
+      ...prev,
+      userDetailsForm: false,
+      monthlyExpenseForm: true,
+      monthlyIncomeForm: false,
+    }));
   };
 
   const prevButtonHandler = () => {
-    setNextSigninForm(false);
+    setShowForms((prev) => ({
+      ...prev,
+      userDetailsForm: true,
+      monthlyExpenseForm: false,
+      monthlyIncomeForm: false,
+    }));
+  };
+
+  const monthlyExpenseNextButtonHandler = () => {
+    setShowForms((prev) => ({
+      ...prev,
+      userDetailsForm: false,
+      monthlyExpenseForm: false,
+      monthlyIncomeForm: true,
+    }));
+  };
+  const monthlyIncomePrevButtonHandler = () => {
+    setShowForms((prev) => ({
+      ...prev,
+      userDetailsForm: false,
+      monthlyExpenseForm: true,
+      monthlyIncomeForm: false,
+    }));
   };
 
   const monthlyExpenseFormAddButtonHandler = () => {
-    setMonthlyExpenseForm(true);
+    setShowForms((prev) => ({
+      ...prev,
+      monthlyExpenseFields: true,
+      monthlyIncomeFields: false,
+    }));
   };
   const monthlyExpenseFormCancelButtonHandler = () => {
-    setMonthlyExpenseForm(false);
+    setShowForms((prev) => ({
+      ...prev,
+      monthlyExpenseFields: false,
+    }));
+  };
+  const monthlyIncomeFormAddButtonHandler = () => {
+    setShowForms((prev) => ({
+      ...prev,
+      monthlyExpenseFields: false,
+      monthlyIncomeFields: true,
+    }));
+  };
+  const monthlyIncomeFormCancelButtonHandler = () => {
+    setShowForms((prev) => ({
+      ...prev,
+      monthlyIncomeFields: false,
+    }));
   };
   const addMonthlyExpense = () => {
     const monthlyExpense = {
       category: categoryInput.current!.value,
-      amount: priceInput.current!.value,
+      amount: Number(priceInput.current!.value),
       date: monthlyDateInput.current!.value,
+      checkBox: addExpenseToCurrentMonth.current!.checked,
     };
     const monthlyExpenseData = [...monthlyExpenseDatas, monthlyExpense];
     setMonthlyExpenseData(monthlyExpenseData);
+  };
+  const addMonthlyIncome = () => {
+    const incomeValue = incomeInput.current?.value?.trim(); // Trim to remove spaces
+
+    const monthlyIncome = {
+      incomeName: incomeNameInput.current!.value,
+      income: Number(incomeValue),
+      date: incomeDateInput.current!.value,
+      checkBox: addIncomeToCurrentMonth.current!.checked,
+    };
+    setMonthlyIncomeData([...monthlyIncomeData, monthlyIncome]);
   };
 
   const handleSignupButtonHandler = async (e: FormEvent) => {
     e.preventDefault();
     const data = {
       monthlyExpenseDatas,
+      monthlyIncomeData,
       formData,
     };
     const response = await fetch(
@@ -200,8 +285,8 @@ const SignupForm = () => {
         <p className="text-2xl text-gray-200 mt-2">EXPENSE TRACKER</p>
         <p className="text-xl mt-8 text-white mb-5">SIGN UP</p>
         <div className="flex justify-center ">
-          {!nextSigninForm && (
-            <form className="w-1/3 bg-slate-500 opacity-80 rounded-2xl mb-8">
+          {showForms.userDetailsForm && (
+            <div className="w-1/3 bg-slate-500 opacity-80 rounded-2xl mb-8">
               <p className="text-gray-200 text-xl">Enter your details:</p>
               <div className="relative  mx-3 mt-10">
                 {formError.firstName && (
@@ -358,12 +443,12 @@ const SignupForm = () => {
                   Next
                 </button>
               </div>
-            </form>
+            </div>
           )}
 
-          {nextSigninForm && (
+          {showForms.monthlyExpenseForm && (
             <div className="bg-slate-600 opacity-70 w-2/3 p-3 rounded-2xl">
-              <form onSubmit={handleSignupButtonHandler}>
+              <div>
                 <div className="flex justify-between text-gray-100 text-xl">
                   <p>ADD YOUR MONTHLY EXPENSE</p>
                   <p>(If you add one click submit)</p>
@@ -384,8 +469,8 @@ const SignupForm = () => {
                       </tr>
                     </thead>
                     <tbody className="">
-                      {monthlyExpenseDatas.map((data) => (
-                        <tr className="" key={data.category}>
+                      {monthlyExpenseDatas.map((data, index) => (
+                        <tr className="" key={index}>
                           <td>{data.category}</td>
                           <td>{data.amount}</td>
                           <td>{data.date}</td>
@@ -402,7 +487,7 @@ const SignupForm = () => {
                       ADD+
                     </button>
                   </div>
-                  {monthlyExpenseForm && (
+                  {showForms.monthlyExpenseFields && (
                     <div>
                       <form className="flex flex-col ">
                         <div className="border-2 border-gray-100 rounded-full w-full py-2 px-7 mt-3">
@@ -427,6 +512,17 @@ const SignupForm = () => {
                             placeholder="Enter the payment date"
                             ref={monthlyDateInput}
                             className="outline-0  bg-inherit w-full  text-gray-50"
+                          />
+                        </div>
+                        <div className="flex justify-between mx-5 pt-4">
+                          <p className="text-lg text-gray-50">
+                            Add this expense to the current month ?
+                          </p>
+                          <input
+                            className="w-5 h-5"
+                            type="checkbox"
+                            name="monthlyExpenseCheckBox"
+                            ref={addExpenseToCurrentMonth}
                           />
                         </div>
                         <div className="flex justify-around  mx-4 mt-4 text-gray-50 mb-4">
@@ -458,13 +554,133 @@ const SignupForm = () => {
                     Prev
                   </button>
                   <button
-                    type="submit"
+                    type="button"
                     className="rounded-full py-1 px-4 border-2 border-gray-200 text-gray-50"
+                    onClick={monthlyExpenseNextButtonHandler}
                   >
-                    SignUp
+                    Next
                   </button>
                 </div>
-              </form>
+              </div>
+            </div>
+          )}
+
+          {showForms.monthlyIncomeForm && (
+            <div className="bg-slate-600 opacity-70 w-2/3 p-3 rounded-2xl">
+              <div>
+                <div className="flex justify-between text-gray-100 text-xl">
+                  <p>ADD YOUR MONTHLY INCOME</p>
+                  <p>(If you add one click submit)</p>
+                </div>
+                <div>
+                  <table className="w-full mt-2">
+                    <thead>
+                      <tr>
+                        <td className="bg-blue-950 rounded-full py-2 px-10">
+                          Income Name
+                        </td>
+                        <td className="bg-blue-950 rounded-full py-2 px-10">
+                          Income
+                        </td>
+                        <td className="bg-blue-950 rounded-full py-2 px-10">
+                          Date
+                        </td>
+                      </tr>
+                    </thead>
+                    <tbody className="">
+                      {monthlyIncomeData.map((data, index) => (
+                        <tr className="" key={index}>
+                          <td>{data.incomeName}</td>
+                          <td>{data.income}</td>
+                          <td>{data.date}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="mt-5">
+                    <button
+                      type="button"
+                      onClick={monthlyIncomeFormAddButtonHandler}
+                      className="rounded-full border-4 border-gray-100 py-1 px-16"
+                    >
+                      ADD+
+                    </button>
+                  </div>
+                  {showForms.monthlyIncomeFields && (
+                    <div>
+                      <form className="flex flex-col ">
+                        <div className="border-2 border-gray-100 rounded-full w-full py-2 px-7 mt-3">
+                          <input
+                            type="text"
+                            placeholder="Enter your Income Name"
+                            ref={incomeNameInput}
+                            className=" outline-0  bg-inherit w-full  text-gray-50"
+                          />
+                        </div>
+                        <div className="border-2 border-gray-100 rounded-full w-full py-2 px-7 mt-3">
+                          <input
+                            type="text"
+                            placeholder="Enter the price"
+                            ref={incomeInput}
+                            className="outline-0  bg-inherit w-full  text-gray-50"
+                          />
+                        </div>
+                        <div className="border-2 border-gray-100 rounded-full w-full py-2 px-7 mt-3">
+                          <input
+                            type="date"
+                            placeholder="Enter the payment date"
+                            ref={incomeDateInput}
+                            className="outline-0  bg-inherit w-full  text-gray-50"
+                          />
+                        </div>
+                        <div className="flex justify-between mx-5 pt-4">
+                          <p className="text-lg text-gray-50">
+                            Add this income to the current month ?
+                          </p>
+                          <input
+                            className="w-5 h-5"
+                            type="checkbox"
+                            name="monthlyIncomeCheckBox"
+                            ref={addIncomeToCurrentMonth}
+                          />
+                        </div>
+                        <div className="flex justify-around  mx-4 mt-4 text-gray-50 mb-4">
+                          <button
+                            type="button"
+                            onClick={addMonthlyIncome}
+                            className="border-4 border-gray-100 rounded-full py-1 px-4"
+                          >
+                            Submit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={monthlyIncomeFormCancelButtonHandler}
+                            className="border-4 border-gray-100 rounded-full py-1 px-4"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+                </div>
+                <div className="flex justify-between mx-4">
+                  <button
+                    className="rounded-full py-1 px-4 border-2 border-gray-200 text-gray-50"
+                    type="button"
+                    onClick={monthlyIncomePrevButtonHandler}
+                  >
+                    Prev
+                  </button>
+                  <button
+                    type="submit"
+                    className="rounded-full py-1 px-4 border-2 border-gray-200 text-gray-50"
+                    onClick={handleSignupButtonHandler}
+                  >
+                    Signup
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>
