@@ -1,10 +1,6 @@
 import mongoose from "mongoose";
-const expenseSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
+
+const ExpenseEntrySchema = new mongoose.Schema({
   expenseName: {
     type: String,
     required: true,
@@ -17,21 +13,30 @@ const expenseSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  type: {
-    type: String,
-    enum: ["daily", "monthly"],
+  reccurenceDate: { type: Date },
+
+  createdAt: { type: Date, default: Date.now },
+});
+const ExpenseSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
     required: true,
   },
-  recurrence: {
-    type: Object,
-    default: null,
-  },
-  date: {
-    type: Date,
-    default: Date.now,
+  monthlyExpense: [ExpenseEntrySchema],
+  otherExpense: [ExpenseEntrySchema],
+  totalExpense: {
+    type: Number,
+    default: 0.0,
   },
 });
 
+ExpenseSchema.pre("save", function (next) {
+  this.totalExpense =
+    (this.monthlyExpense?.reduce((sum, entry) => sum + entry.price, 0) || 0) +
+    (this.otherExpense?.reduce((sum, entry) => sum + entry.price, 0) || 0);
+  next();
+});
 const EXPENSES =
-  mongoose.models.Expense || mongoose.model("Expense", expenseSchema);
+  mongoose.models.Expense || mongoose.model("Expense", ExpenseSchema);
 export default EXPENSES;

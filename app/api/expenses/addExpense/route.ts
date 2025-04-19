@@ -6,7 +6,7 @@ const expenseSchema = z.object({
   expenseName: z.string().min(1, "Expense name is required"), // Must be a non-empty string
   price: z.number().positive("Price must be a positive number"), // Must be a positive number
   category: z.string().min(1, "Category is required"), // Must be a non-empty string
-  date: z.string().refine((val) => !isNaN(Date.parse(val)), "Invalid date"), // Check if valid date
+  // date: z.string().refine((val) => !isNaN(Date.parse(val)), "Invalid date"), // Check if valid date
   userId: z.string().length(24, "Invalid user ID"), // Must be a valid 24-character MongoDB ObjectId
 });
 

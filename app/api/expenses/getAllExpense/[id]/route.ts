@@ -12,160 +12,74 @@ export async function GET(
     const objectId = new mongoose.Types.ObjectId(userId);
     await connectDB();
 
-    const now = new Date();
-    const startOfToday = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate()
-    );
-    const endOfToday = new Date(startOfToday);
-    endOfToday.setHours(23, 59, 59, 999);
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
 
-    const startOfYesterday = new Date(startOfToday);
-    startOfYesterday.setDate(startOfToday.getDate() - 1);
-    const endOfYesterday = new Date(startOfYesterday);
-    endOfYesterday.setHours(23, 59, 59, 999);
+    const tomorrowDate = new Date(todayDate);
+    tomorrowDate.setDate(todayDate.getDate() + 1);
 
-    const endOfCurrentMonth = new Date(
-      now.getFullYear(),
-      now.getMonth() + 1,
-      0
-    );
-    endOfCurrentMonth.setHours(23, 59, 59, 999);
+    const yesterdayDate = new Date(todayDate);
+    yesterdayDate.setDate(todayDate.getDate() - 1);
 
-    const startOfPreviousMonth = new Date(
-      now.getFullYear(),
-      now.getMonth() - 1,
-      1
-    );
-    const currentMonth = now.getMonth() + 1; // Get current month (1-based)
-    const previousMonth = currentMonth === 1 ? 12 : currentMonth - 1; // Handle January case
-
-    const allExpense = await EXPENSES.aggregate([
-      { $match: { userId: objectId } },
-      {
-        $group: {
-          _id: null,
-          totalExpense: { $sum: "$price" },
-        },
-      },
-    ]);
-    const todayExpense = await EXPENSES.aggregate([
+    const totalExpense = await EXPENSES.aggregate([
       {
         $match: {
           userId: objectId,
-          date: {
-            $gte: startOfToday,
-            $lte: endOfToday,
-          },
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          totalExpense: { $sum: "$price" },
-          count: { $sum: 1 },
-        },
-      },
-    ]);
-    const yesterdayExpense = await EXPENSES.aggregate([
-      {
-        $match: {
-          userId: objectId,
-          date: {
-            $gte: startOfYesterday,
-            $lte: endOfYesterday,
-          },
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          totalExpense: { $sum: "$price" },
-          count: { $sum: 1 },
-        },
-      },
-    ]);
-    const expensesByCategory = await EXPENSES.aggregate([
-      {
-        $match: {
-          userId: objectId,
-          date: { $gte: startOfPreviousMonth, $lte: endOfCurrentMonth },
-        },
-      },
-      {
-        $group: {
-          _id: {
-            category: "$category",
-            month: { $month: "$date" },
-          },
-          totalExpense: {
-            $sum: "$price",
-          },
-          count: { $sum: 1 },
-        },
-      },
-      {
-        $group: {
-          _id: "$_id.category",
-          expenses: {
-            $push: {
-              month: {
-                $cond: [
-                  { $eq: ["$_id.month", currentMonth] },
-                  "currentMonth",
-                  "previousMonth",
-                ],
-              },
-              totalExpense: "$totalExpense",
-              count: "$count",
-            },
-          },
         },
       },
       {
         $project: {
-          _id: 1,
-          expenses: {
-            $arrayToObject: {
+          totalExpens: "$totalExpense",
+          otherExpenses: "$otherExpense",
+          todayExpense: {
+            $sum: {
               $map: {
-                input: "$expenses",
-                as: "exp",
-                in: [
-                  "$$exp.month",
-                  {
-                    totalExpense: "$$exp.totalExpense",
-                    count: "$$exp.count",
+                input: {
+                  $filter: {
+                    input: "$otherExpense",
+                    as: "expense",
+                    cond: {
+                      $and: [
+                        { $gte: ["$$expense.createdAt", todayDate] },
+                        { $lt: ["$$expense.createdAt", tomorrowDate] },
+                      ],
+                    },
                   },
-                ],
+                },
+                as: "expense",
+                in: "$$expense.price",
+              },
+            },
+          },
+          yesterdayExpense: {
+            $sum: {
+              $map: {
+                input: {
+                  $filter: {
+                    input: "$otherExpense",
+                    as: "expense",
+                    cond: {
+                      $and: [
+                        { $gte: ["$$expense.createdAt", tomorrowDate] },
+                        { $lt: ["$$expense.createdAt", todayDate] },
+                      ],
+                    },
+                  },
+                },
+                as: "expense",
+                in: "$$expense.price",
               },
             },
           },
         },
       },
-      {
-        $addFields: {
-          extraSpent: {
-            $subtract: [
-              { $ifNull: ["$expenses.currentMonth.totalExpense", 0] },
-              { $ifNull: ["$expenses.previousMonth.totalExpense", 0] },
-            ],
-          },
-        },
-      },
-      {
-        $sort: {
-          _id: 1,
-        },
-      },
     ]);
     return ResponseSender("Success", 200, {
-      todayExpense,
-      yesterdayExpense,
-      expensesByCategory,
-      allExpense,
+      totalExpense,
     });
   } catch (error) {
+    console.log(error);
+
     return ResponseSender("Internal server Error", 500);
   }
 }

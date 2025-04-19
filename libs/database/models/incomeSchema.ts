@@ -16,7 +16,8 @@ const IncomeEntrySchema = new mongoose.Schema({
   name: { type: String, required: true },
   income: { type: Number, required: true },
   addToThisMonth: { type: Boolean, default: true, required: true },
-  dateAdded: { type: Date, default: Date.now },
+  reccurenceDate: { type: Date },
+  createdAt: { type: Date, default: Date.now },
 });
 const IncomeSchema = new mongoose.Schema<Income>({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },

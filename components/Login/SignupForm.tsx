@@ -5,8 +5,9 @@ import { z } from "zod";
 import { useSetupUser } from "../utils/setupUser";
 
 interface MonthlyExpense {
+  expenseName: string;
   category: string;
-  amount: number;
+  price: number;
   date: string;
   checkBox: boolean;
 }
@@ -148,6 +149,7 @@ const SignupForm = () => {
   };
 
   //Intial monthly expense
+  const expenseNameInput = useRef<HTMLInputElement>(null);
   const categoryInput = useRef<HTMLInputElement>(null);
   const priceInput = useRef<HTMLInputElement>(null);
   const monthlyDateInput = useRef<HTMLInputElement>(null);
@@ -232,8 +234,9 @@ const SignupForm = () => {
   };
   const addMonthlyExpense = () => {
     const monthlyExpense = {
+      expenseName: expenseNameInput.current!.value,
       category: categoryInput.current!.value,
-      amount: Number(priceInput.current!.value),
+      price: Number(priceInput.current!.value),
       date: monthlyDateInput.current!.value,
       checkBox: addExpenseToCurrentMonth.current!.checked,
     };
@@ -458,6 +461,9 @@ const SignupForm = () => {
                     <thead>
                       <tr>
                         <td className="bg-blue-950 rounded-full py-2 px-10">
+                          Expense Name
+                        </td>
+                        <td className="bg-blue-950 rounded-full py-2 px-10">
                           Category
                         </td>
                         <td className="bg-blue-950 rounded-full py-2 px-10">
@@ -471,8 +477,9 @@ const SignupForm = () => {
                     <tbody className="">
                       {monthlyExpenseDatas.map((data, index) => (
                         <tr className="" key={index}>
+                          <td>{data.expenseName}</td>
                           <td>{data.category}</td>
-                          <td>{data.amount}</td>
+                          <td>{data.price}</td>
                           <td>{data.date}</td>
                         </tr>
                       ))}
@@ -490,6 +497,14 @@ const SignupForm = () => {
                   {showForms.monthlyExpenseFields && (
                     <div>
                       <form className="flex flex-col ">
+                        <div className="border-2 border-gray-100 rounded-full w-full py-2 px-7 mt-3">
+                          <input
+                            type="text"
+                            placeholder="Enter your Expense Name"
+                            ref={expenseNameInput}
+                            className=" outline-0  bg-inherit w-full  text-gray-50"
+                          />
+                        </div>
                         <div className="border-2 border-gray-100 rounded-full w-full py-2 px-7 mt-3">
                           <input
                             type="text"

@@ -8,8 +8,9 @@ import EXPENSES from "@/libs/database/models/expenseSchema";
 import INCOME from "@/libs/database/models/incomeSchema";
 
 interface MONTHLYEXPENSE_DATA_OBJECT {
+  expenseName: string;
   category: string;
-  amount: number;
+  price: number;
   date: string;
   checkBox: boolean;
 }
@@ -62,7 +63,7 @@ const signUpSchema = z.object({
 export async function POST(req: Request) {
   try {
     const bodyData: BODYDATA = await req.json();
-    console.log(bodyData);
+    // console.log(bodyData);
 
     const parsedData = signUpSchema.safeParse(bodyData.formData);
     if (!parsedData.success) {
@@ -82,42 +83,65 @@ export async function POST(req: Request) {
     const newUser = new USER(userData);
     await newUser.save();
     if (bodyData.monthlyExpenseDatas.length > 0) {
-      const newExpense = EXPENSES.insertMany(
-        bodyData.monthlyExpenseDatas.map((expense) => {
-          const expenseDate = new Date(expense.date); // Convert to Date object
-          const nextDueDate = new Date(expenseDate); // Clone the date
-
-          nextDueDate.setMonth(nextDueDate.getMonth() + 1); // Add 1 month
-          return {
-            userId: newUser._id,
-            expenseName: expense.category,
-            category: expense.category,
-            price: expense.amount,
-            type: "monthly",
-            recurrence: { startDate: expenseDate, nextDueDate: nextDueDate },
-          };
+      const monthlyExpenseEntries = bodyData.monthlyExpenseDatas.map(
+        (expense) => ({
+          name: expense.expenseName,
+          category: expense.category,
+          price: Number(expense.price), // Ensure it's a number
+          reccurenceDate: new Date(expense.date), // Store the correct date
+          addToThisMonth: expense.checkBox, // Store checkBox value
         })
+      );
+
+      // Calculate total income to be added based on checkBox
+      const additionaExpense = bodyData.monthlyExpenseDatas.filter(
+        (expense) => expense.checkBox
+      ); // Only add checked incomes
+
+      const totalExpens = additionaExpense.reduce(
+        (sum, expense) => sum + Number(expense.price),
+        0
+      );
+
+      // Update Income document
+      await EXPENSES.findOneAndUpdate(
+        { userId: newUser._id }, // Find by userId
+        {
+          $push: {
+            monthlyExpense: { $each: monthlyExpenseEntries },
+            otherExpense: { $each: additionaExpense },
+          }, // Append new incomes to the array
+          $inc: { totalExpense: totalExpens }, // Increment totalIncome dynamically
+        },
+        { upsert: true, new: true }
       );
     }
     if (bodyData.monthlyIncomeData.length > 0) {
       const monthlyIncomeEntries = bodyData.monthlyIncomeData.map((income) => ({
         name: income.incomeName,
         income: Number(income.income), // Ensure it's a number
-        dateAdded: new Date(income.date), // Store the correct date
+        reccurenceDate: new Date(income.date), // Store the correct date
         addToThisMonth: income.checkBox, // Store checkBox value
       }));
 
       // Calculate total income to be added based on checkBox
-      const additionalIncome = bodyData.monthlyIncomeData
-        .filter((income) => income.checkBox) // Only add checked incomes
-        .reduce((sum, income) => sum + Number(income.income), 0);
+      const additionalIncome = bodyData.monthlyIncomeData.filter(
+        (income) => income.checkBox
+      ); // Only add checked incomes
+      const totalIncome = additionalIncome.reduce(
+        (sum, income) => sum + Number(income.income),
+        0
+      );
 
       // Update Income document
       await INCOME.findOneAndUpdate(
         { userId: newUser._id }, // Find by userId
         {
-          $push: { monthlyIncome: { $each: monthlyIncomeEntries } }, // Append new incomes to the array
-          $inc: { totalIncome: additionalIncome }, // Increment totalIncome dynamically
+          $push: {
+            monthlyIncome: { $each: monthlyIncomeEntries },
+            otherIncome: { $each: additionalIncome },
+          }, // Append new incomes to the array
+          $inc: { totalIncome: totalIncome }, // Increment totalIncome dynamically
         },
         { upsert: true, new: true }
       );
