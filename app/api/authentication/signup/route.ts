@@ -63,7 +63,7 @@ const signUpSchema = z.object({
 export async function POST(req: Request) {
   try {
     const bodyData: BODYDATA = await req.json();
-    // console.log(bodyData);
+    console.log(bodyData);
 
     const parsedData = signUpSchema.safeParse(bodyData.formData);
     if (!parsedData.success) {
@@ -77,82 +77,56 @@ export async function POST(req: Request) {
     const userData = {
       ...parsedData.data,
       password: hashedPassword,
+      monthlyExpense: [...bodyData.monthlyExpenseDatas],
+      monthlyIncome: [...bodyData.monthlyIncomeData],
     };
 
     await connectDB();
     const newUser = new USER(userData);
     await newUser.save();
+
     if (bodyData.monthlyExpenseDatas.length > 0) {
-      const monthlyExpenseEntries = bodyData.monthlyExpenseDatas.map(
-        (expense) => ({
-          name: expense.expenseName,
-          category: expense.category,
-          price: Number(expense.price), // Ensure it's a number
-          reccurenceDate: new Date(expense.date), // Store the correct date
-          addToThisMonth: expense.checkBox, // Store checkBox value
-        })
-      );
-
-      // Calculate total income to be added based on checkBox
-      const additionaExpense = bodyData.monthlyExpenseDatas.filter(
-        (expense) => expense.checkBox
-      ); // Only add checked incomes
-
-      const totalExpens = additionaExpense.reduce(
-        (sum, expense) => sum + Number(expense.price),
-        0
-      );
-
-      // Update Income document
-      await EXPENSES.findOneAndUpdate(
-        { userId: newUser._id }, // Find by userId
-        {
-          $push: {
-            monthlyExpense: { $each: monthlyExpenseEntries },
-            otherExpense: { $each: additionaExpense },
-          }, // Append new incomes to the array
-          $inc: { totalExpense: totalExpens }, // Increment totalIncome dynamically
-        },
-        { upsert: true, new: true }
-      );
+      bodyData.monthlyExpenseDatas.forEach(async (expense) => {
+        if (expense.checkBox) {
+          const EXPENSE = new EXPENSES({
+            userId: newUser._id,
+            expenseName: expense.expenseName,
+            category: expense.category,
+            price: expense.price,
+          });
+          await EXPENSE.save();
+          await USER.findByIdAndUpdate(newUser._id, {
+            $inc: { totalExpense: EXPENSE.price },
+          });
+        }
+      });
     }
+
     if (bodyData.monthlyIncomeData.length > 0) {
-      const monthlyIncomeEntries = bodyData.monthlyIncomeData.map((income) => ({
-        name: income.incomeName,
-        income: Number(income.income), // Ensure it's a number
-        reccurenceDate: new Date(income.date), // Store the correct date
-        addToThisMonth: income.checkBox, // Store checkBox value
-      }));
-
-      // Calculate total income to be added based on checkBox
-      const additionalIncome = bodyData.monthlyIncomeData.filter(
-        (income) => income.checkBox
-      ); // Only add checked incomes
-      const totalIncome = additionalIncome.reduce(
-        (sum, income) => sum + Number(income.income),
-        0
-      );
-
-      // Update Income document
-      await INCOME.findOneAndUpdate(
-        { userId: newUser._id }, // Find by userId
-        {
-          $push: {
-            monthlyIncome: { $each: monthlyIncomeEntries },
-            otherIncome: { $each: additionalIncome },
-          }, // Append new incomes to the array
-          $inc: { totalIncome: totalIncome }, // Increment totalIncome dynamically
-        },
-        { upsert: true, new: true }
-      );
+      bodyData.monthlyIncomeData.forEach(async (income) => {
+        if (income.checkBox) {
+          const newIncome = new INCOME({
+            userId: newUser._id,
+            incomeName: income.incomeName,
+            income: income.income,
+          });
+          await newIncome.save();
+          await USER.findByIdAndUpdate(newUser._id, {
+            $inc: { totalIncome: newIncome.income },
+          });
+        }
+      });
     }
-
-    const token = await CreateToken(newUser.id);
+    // const token = await CreateToken(newUser.id);
 
     return NextResponse.json(
       { message: "Signup successfull", user: newUser },
       { status: 200 }
     );
+    // return NextResponse.json(
+    //   { message: "Signup successfull", user: userData },
+    //   { status: 200 }
+    // );
   } catch (error) {
     console.error("Unexpected Error:", error);
     return NextResponse.json(

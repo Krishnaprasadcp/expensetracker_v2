@@ -8,7 +8,7 @@ interface MonthlyExpense {
   expenseName: string;
   category: string;
   price: number;
-  date: string;
+  reccurenceDate: string;
   checkBox: boolean;
 }
 
@@ -27,13 +27,13 @@ const initialArgs: State = {
 interface MonthlyDataObject {
   category: string;
   amount: string;
-  date: string;
+  reccurenceDate: string;
   checkBox: boolean;
 }
 interface MonthlyIncomeDataObject {
   incomeName: string;
   income: number;
-  date: string;
+  reccurenceDate: string;
   checkBox: boolean;
 }
 interface FormDataObject {
@@ -237,7 +237,7 @@ const SignupForm = () => {
       expenseName: expenseNameInput.current!.value,
       category: categoryInput.current!.value,
       price: Number(priceInput.current!.value),
-      date: monthlyDateInput.current!.value,
+      reccurenceDate: monthlyDateInput.current!.value,
       checkBox: addExpenseToCurrentMonth.current!.checked,
     };
     const monthlyExpenseData = [...monthlyExpenseDatas, monthlyExpense];
@@ -249,7 +249,7 @@ const SignupForm = () => {
     const monthlyIncome = {
       incomeName: incomeNameInput.current!.value,
       income: Number(incomeValue),
-      date: incomeDateInput.current!.value,
+      reccurenceDate: incomeDateInput.current!.value,
       checkBox: addIncomeToCurrentMonth.current!.checked,
     };
     setMonthlyIncomeData([...monthlyIncomeData, monthlyIncome]);
@@ -480,7 +480,7 @@ const SignupForm = () => {
                           <td>{data.expenseName}</td>
                           <td>{data.category}</td>
                           <td>{data.price}</td>
-                          <td>{data.date}</td>
+                          <td>{data.reccurenceDate}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -607,7 +607,7 @@ const SignupForm = () => {
                         <tr className="" key={index}>
                           <td>{data.incomeName}</td>
                           <td>{data.income}</td>
-                          <td>{data.date}</td>
+                          <td>{data.reccurenceDate}</td>
                         </tr>
                       ))}
                     </tbody>

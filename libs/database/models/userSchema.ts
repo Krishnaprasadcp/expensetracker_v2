@@ -24,8 +24,48 @@ const UserSchema = new mongoose.Schema({
       { option: "Food", value: "food" },
       { option: "Stationery", value: "stationery" },
       { option: "Bakery", value: "bakery" },
-      { option: "Vegitables", value: "vegitables" },
+      { option: "Vegetables", value: "vegetables" },
     ],
+  },
+  monthlyExpense: {
+    type: [
+      {
+        expenseName: {
+          type: String,
+          required: true,
+        },
+        category: {
+          type: String,
+          required: true,
+        },
+        price: {
+          type: Number,
+          required: true,
+        },
+        reccurenceDate: { type: Date },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
+    default: [],
+  },
+  monthlyIncome: {
+    type: [
+      {
+        incomeName: { type: String, required: true },
+        income: { type: Number, required: true },
+        reccurenceDate: { type: Date },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
+    default: [],
+  },
+  totalExpense: {
+    type: Number,
+    default: 0.0,
+  },
+  totalIncome: {
+    type: Number,
+    default: 0.0,
   },
   createdAt: {
     type: Date,

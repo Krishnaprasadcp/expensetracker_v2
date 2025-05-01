@@ -1,230 +1,216 @@
 "use client";
 import { useAppSelector } from "@/store/hooks";
-import {
-  ChangeEvent,
-  FormEvent,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
-interface INCOME_TYPE {
-  name: string;
-  income: number;
-  dateAdded: string;
-  _id: string;
-}
-interface INCOME_DATA {
-  [key: string]: INCOME_TYPE | number;
-  totalIncome: number;
-}
-const Income: React.FC = () => {
-  const userId = useAppSelector((state) => state.user.userID);
-  const [incomeData, setIncomeData] = useState<INCOME_DATA | null>(null);
-  const fetchTotalIncome = useCallback(async () => {
-    if (userId) {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/income/getIncomeData/${userId}`
-      );
-      const parsRes = await response.json();
-      console.log(parsRes);
+import React, { ChangeEvent, FormEvent, useState } from "react";
 
-      setIncomeData(parsRes.data);
-    }
-  }, [userId]);
-
-  useEffect(() => {
-    fetchTotalIncome();
-  }, [fetchTotalIncome]);
-
-  const [monthlyIncome, setMonthlyIncome] = useState({
-    monthlyIncomeName: "",
-    monthlyIncome: 0,
-  });
-
-  const [otherIncome, setOtherIncome] = useState({
-    otherIncomeName: "",
-    otherIncome: 0,
-  });
-  console.log(incomeData);
+const AddIncome: React.FC = () => {
+  const userData = useAppSelector((state) => state.user);
+  const [isOpen, setIsOpen] = useState(false);
   const [errors, setErrors] = useState({
-    monthlyIncome: "",
-    otherIncome: "",
+    incomeName: "",
+    income: "",
+    date: "",
   });
 
-  const handleChangeEvent = (e: ChangeEvent<HTMLInputElement>) => {
+  const [incomeData, setIncomeData] = useState({
+    incomeName: "",
+    income: "",
+    isMonthlyIncome: false,
+    isIncluded: false,
+    date: "",
+  });
+  const handleFocus = () => {
+    setIsOpen(true);
+  };
+  // Handle input change
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value, type } = e.target;
+    const newValue =
+      type === "checkbox" && e.target instanceof HTMLInputElement
+        ? e.target.checked
+        : value;
+    setIncomeData((prevData) => ({
+      ...prevData,
+      [name]: newValue,
+    }));
+
+    // Remove error message when user starts typing
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      [name]: "",
+    }));
+  };
+  // console.log(expenseData.isMonthlyExpense);
+
+  // Handle validation on blur
+  const handleBlur = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
 
-    if (name === "monthlyIncome" || name === "otherIncome") {
-      if (!/^\d*\.?\d*$/.test(value)) {
-        setErrors((prev) => ({
-          ...prev,
-          [name]: "Only numbers are allowed",
-        }));
-      } else {
-        setErrors((prev) => ({
-          ...prev,
-          [name]: "",
-        }));
-      }
-    }
-
-    if (name.startsWith("monthlyIncome")) {
-      setMonthlyIncome((prev) => ({
-        ...prev,
-        [name]: name === "monthlyIncome" ? Number(value) || 0 : value,
-      }));
-    } else if (name.startsWith("otherIncome")) {
-      setOtherIncome((prev) => ({
-        ...prev,
-        [name]: name === "otherIncome" ? Number(value) || 0 : value,
+    if (!value.trim()) {
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        [name]: `${name.replace(/([A-Z])/g, " $1")} is required`,
       }));
     }
   };
 
-  const handleSubmitMontlhyIncome = async (e: FormEvent) => {
+  // Handle form submission
+  const handleAddIncome = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    // Validate all fields before submitting
+    let newErrors = {
+      incomeName: incomeData.incomeName ? "" : "Income name is required",
+      income: incomeData.income ? "" : "Income is required",
+      date: incomeData.isMonthlyIncome
+        ? incomeData.date
+          ? ""
+          : "Date is required"
+        : "",
+    };
+
+    setErrors(newErrors);
+
+    // Check if any field has an error
+    if (Object.values(newErrors).some((error) => error !== "")) {
+      return;
+    }
+
+    // Submit form data
+    const newData = { ...incomeData, userId: userData.userID };
+    // console.log(newData);
+
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/income/addMonthlyIncome`
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/income/addIncome`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newData),
+      }
     );
+
+    if (!response.ok) {
+      console.log("Something has happened");
+      return;
+    }
+
+    const data = await response.json();
+    console.log(data);
   };
-  const handleSubmitOtherIncome = useCallback(
-    async (e: FormEvent) => {
-      e.preventDefault();
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/income/addOtherIncome`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ ...otherIncome, userId }),
-        }
-      );
-      const data = await response.json();
-      fetchTotalIncome();
-      setOtherIncome({
-        otherIncome: 0,
-        otherIncomeName: "",
-      });
-    },
-    [fetchTotalIncome, userId, otherIncome]
-  );
 
   return (
     <>
-      <div className="flex justify-around pt-24">
-        <div className="flex ">
-          <form onSubmit={handleSubmitMontlhyIncome}>
-            <div className="">
-              <p className="text-gray-200 text-xl ">Add Your Monthly Income</p>
-              <input
-                type="text"
-                name="monthlyIncomeName"
-                onChange={handleChangeEvent}
-                placeholder="Enter your Income Name"
-                className="rounded-full outline-none w-2/3 h-8 px-3 mt-2"
-              />
-              <input
-                type="text"
-                name="monthlyIncome"
-                onChange={handleChangeEvent}
-                placeholder="Enter your Monthly Income"
-                className="rounded-full outline-none w-2/3 h-8 px-3 mt-2"
-              />
-              {errors.monthlyIncome && (
-                <p className="text-red-500 text-sm">{errors.monthlyIncome}</p>
-              )}
-              <div className="flex justify-center">
-                <button
-                  disabled={errors.otherIncome !== ""}
-                  className="rounded-full mt-2 border-2 text-gray-100 border-gray-200 px-3 py-1 "
-                >
-                  Add
-                </button>
+      <div className="mt-9">
+        {userData.user && (
+          <>
+            <p className="text-4xl text-gray-200 ml-8">
+              {`Welcome ${userData.user.firstName}`}
+            </p>
+            <div className="flex justify-around h-fit">
+              <div className="my-auto">
+                <img
+                  src="/images/signinimage.png"
+                  alt="image"
+                  width={500}
+                  height={500}
+                />
+              </div>
+              <div className="w-1/2 mt-10">
+                <div className="ml-8">
+                  <p className="text-4xl text-gray-200">
+                    ADD YOUR <span className="block mt-4">INCOMES HERE</span>
+                  </p>
+                </div>
+                <div className="mt-10">
+                  <form
+                    className="grid grid-cols-1 gap-6"
+                    onSubmit={handleAddIncome}
+                  >
+                    {/* Expense Name */}
+                    <div>
+                      <input
+                        className="addexpenseinput p-1"
+                        type="text"
+                        name="incomeName"
+                        placeholder="Enter your Income name"
+                        value={incomeData.incomeName}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                      />
+                      {errors.incomeName && (
+                        <p className="text-red-500">{errors.incomeName}</p>
+                      )}
+                    </div>
+
+                    {/* Income */}
+                    <div>
+                      <input
+                        className="addexpenseinput p-1"
+                        type="text"
+                        name="income"
+                        placeholder="Enter the income"
+                        value={incomeData.income}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                      />
+                      {errors.income && (
+                        <p className="text-red-500">{errors.income}</p>
+                      )}
+                    </div>
+                    <div>
+                      <p className="inline pr-2 text-white">
+                        Include to Monthly Income
+                      </p>
+                      <input
+                        type="checkbox"
+                        name="isMonthlyIncome"
+                        checked={incomeData.isMonthlyIncome}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    {/* Date */}
+                    {incomeData.isMonthlyIncome && (
+                      <div>
+                        <input
+                          className="addexpenseinput p-1"
+                          type="date"
+                          name="date"
+                          value={incomeData.date}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                        />
+                        {errors.date && (
+                          <p className="text-red-500">{errors.date}</p>
+                        )}
+                      </div>
+                    )}
+                    {incomeData.isMonthlyIncome && (
+                      <div>
+                        <p className="inline pr-2 text-white">
+                          Include to current Month
+                        </p>
+                        <input
+                          type="checkbox"
+                          name="isIncluded"
+                          checked={incomeData.isIncluded}
+                          onChange={handleChange}
+                        />
+                      </div>
+                    )}
+                    {/* Submit Button */}
+                    <button className="p-2 rounded text-white" type="submit">
+                      Save
+                    </button>
+                  </form>
+                </div>
               </div>
             </div>
-          </form>
-        </div>
-
-        <div className="rounded-full aspect-square border-white border-2 flex justify-center items-center">
-          <p className="text-gray-200 text-2xl text-center  p-2">
-            Your Saving <span className="block">{incomeData?.totalIncome}</span>
-          </p>
-        </div>
-
-        <div className="flex ">
-          <form onSubmit={handleSubmitOtherIncome}>
-            <div className="">
-              <p className="text-gray-200 text-xl ">Add Your Other Income</p>
-              <input
-                type="text"
-                name="otherIncomeName"
-                onChange={handleChangeEvent}
-                value={otherIncome.otherIncomeName}
-                placeholder="Enter your Income Name"
-                className="rounded-full outline-none w-2/3 h-8 px-3 mt-2"
-              />
-              <input
-                type="text"
-                name="otherIncome"
-                onChange={handleChangeEvent}
-                value={otherIncome.otherIncome}
-                placeholder="Enter your Other Income"
-                className="rounded-full outline-none w-2/3 h-8 px-3 mt-2"
-              />
-              {errors.otherIncome && (
-                <p className="text-red-500 text-sm">{errors.otherIncome}</p>
-              )}
-              <div className="flex justify-center">
-                <button
-                  disabled={errors.otherIncome !== ""}
-                  className="rounded-full mt-2 border-2 text-gray-100 border-gray-200 px-3 py-1 "
-                >
-                  Add
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <div>
-        <table>
-          <thead>
-            <tr>
-              <td>Date</td>
-              <td>Added Money</td>
-              <td>Source</td>
-            </tr>
-          </thead>
-          <tbody>
-            {incomeData &&
-              Object.keys(incomeData)
-                .filter((key) => key !== "totalIncome")
-                .map((key) => {
-                  const income = incomeData[key] as INCOME_TYPE;
-
-                  // Ensure income is defined before rendering
-                  if (!income || typeof income !== "object") return null;
-
-                  return (
-                    <tr key={income._id}>
-                      <td>{income.name}</td>
-                      <td>{income.income}</td>
-                      <td>{income.dateAdded}</td>
-                    </tr>
-                  );
-                })}
-          </tbody>
-        </table>
+          </>
+        )}
       </div>
     </>
   );
 };
 
-export default Income;
-// <tr>
-//   <td>28/10/2002</td>
-//   <td>500</td>
-//   <td>Uncle gave me</td>
-// </tr>;
+export default AddIncome;

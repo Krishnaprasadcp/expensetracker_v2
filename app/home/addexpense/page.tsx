@@ -16,6 +16,8 @@ const AddExpense: React.FC = () => {
     expenseName: "",
     price: "",
     category: "",
+    isMonthlyExpense: false,
+    isIncluded: false,
     date: "",
   });
   const handleFocus = () => {
@@ -32,10 +34,14 @@ const AddExpense: React.FC = () => {
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+    const newValue =
+      type === "checkbox" && e.target instanceof HTMLInputElement
+        ? e.target.checked
+        : value;
     setExpenseData((prevData) => ({
       ...prevData,
-      [name]: value,
+      [name]: newValue,
     }));
 
     // Remove error message when user starts typing
@@ -44,6 +50,7 @@ const AddExpense: React.FC = () => {
       [name]: "",
     }));
   };
+  // console.log(expenseData.isMonthlyExpense);
 
   // Handle validation on blur
   const handleBlur = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -69,7 +76,11 @@ const AddExpense: React.FC = () => {
       expenseName: expenseData.expenseName ? "" : "Expense name is required",
       price: expenseData.price ? "" : "Price is required",
       category: expenseData.category ? "" : "Category is required",
-      date: expenseData.date ? "" : "Date is required",
+      date: expenseData.isMonthlyExpense
+        ? expenseData.date
+          ? ""
+          : "Date is required"
+        : "",
     };
 
     setErrors(newErrors);
@@ -81,6 +92,7 @@ const AddExpense: React.FC = () => {
 
     // Submit form data
     const newData = { ...expenseData, userId: userData.userID };
+    // console.log(newData);
 
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_BASE_URL}/api/expenses/addExpense`,
@@ -97,7 +109,7 @@ const AddExpense: React.FC = () => {
     }
 
     const data = await response.json();
-    console.log(data);
+    // console.log(data);
   };
 
   return (
@@ -196,22 +208,46 @@ const AddExpense: React.FC = () => {
                         <p className="text-red-500">{errors.price}</p>
                       )}
                     </div>
-
-                    {/* Date */}
                     <div>
+                      <p className="inline pr-2 text-white">
+                        Include to Monthly Expense
+                      </p>
                       <input
-                        className="addexpenseinput p-1"
-                        type="date"
-                        name="date"
-                        value={expenseData.date}
+                        type="checkbox"
+                        name="isMonthlyExpense"
+                        checked={expenseData.isMonthlyExpense}
                         onChange={handleChange}
-                        onBlur={handleBlur}
                       />
-                      {errors.date && (
-                        <p className="text-red-500">{errors.date}</p>
-                      )}
                     </div>
-
+                    {/* Date */}
+                    {expenseData.isMonthlyExpense && (
+                      <div>
+                        <input
+                          className="addexpenseinput p-1"
+                          type="date"
+                          name="date"
+                          value={expenseData.date}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                        />
+                        {errors.date && (
+                          <p className="text-red-500">{errors.date}</p>
+                        )}
+                      </div>
+                    )}
+                    {expenseData.isMonthlyExpense && (
+                      <div>
+                        <p className="inline pr-2 text-white">
+                          Include to current Month
+                        </p>
+                        <input
+                          type="checkbox"
+                          name="isIncluded"
+                          checked={expenseData.isIncluded}
+                          onChange={handleChange}
+                        />
+                      </div>
+                    )}
                     {/* Submit Button */}
                     <button className="p-2 rounded text-white" type="submit">
                       Save

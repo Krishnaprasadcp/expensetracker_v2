@@ -1,6 +1,21 @@
 import mongoose from "mongoose";
 
-const ExpenseEntrySchema = new mongoose.Schema({
+// Define the ExpenseEntry interface for TypeScript
+interface IExpenseEntry {
+  _id: mongoose.Types.ObjectId; // Add _id for subdocument
+  expenseName: string;
+  category: string;
+  price: number;
+  createdAt: Date;
+}
+
+const ExpenseSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+
   expenseName: {
     type: String,
     required: true,
@@ -13,30 +28,11 @@ const ExpenseEntrySchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  reccurenceDate: { type: Date },
-
   createdAt: { type: Date, default: Date.now },
-});
-const ExpenseSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  monthlyExpense: [ExpenseEntrySchema],
-  otherExpense: [ExpenseEntrySchema],
-  totalExpense: {
-    type: Number,
-    default: 0.0,
-  },
+
 });
 
-ExpenseSchema.pre("save", function (next) {
-  this.totalExpense =
-    (this.monthlyExpense?.reduce((sum, entry) => sum + entry.price, 0) || 0) +
-    (this.otherExpense?.reduce((sum, entry) => sum + entry.price, 0) || 0);
-  next();
-});
 const EXPENSES =
-  mongoose.models.Expense || mongoose.model("Expense", ExpenseSchema);
+  mongoose.models.Expense ||
+  mongoose.model<IExpenseEntry>("Expense", ExpenseSchema);
 export default EXPENSES;
