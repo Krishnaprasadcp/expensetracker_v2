@@ -1,6 +1,7 @@
 "use client";
 import { useAppSelector } from "@/store/hooks";
-import React, { useEffect, useState } from "react";
+import React from "react";
+import useSWR from "swr";
 
 interface CurrentAndPreviousMonth {
   _id: string;
@@ -8,30 +9,25 @@ interface CurrentAndPreviousMonth {
   previousMonthTotal: number;
   difference: 500;
 }
-interface ExpenseData {
-  todayExpense: number;
-  yesterdayExpense: number;
-  totalExpense: number;
-  currentAndPreviousMonthTotal: [CurrentAndPreviousMonth];
-}
-const Home: React.FC = () => {
-  const [expenseData, setExpenseData] = useState<ExpenseData | null>(null);
-  const userDatas = useAppSelector((state) => state.user);
-  useEffect(() => {
-    if (userDatas.userID) {
-      async function getAllExpense() {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/expenses/getAllExpense/${userDatas.userID}`
-        );
-        const { data } = await response.json();
-        console.log(data);
 
-        setExpenseData(data || null);
-      }
-      getAllExpense();
-    }
-  }, [userDatas.userID]);
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
+const Home: React.FC = () => {
+  const userDatas = useAppSelector((state) => state.user);
+  const { data, error } = useSWR(
+    userDatas.userID
+      ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/expenses/homeExpense/${userDatas.userID}`
+      : null,
+    fetcher,
+    { revalidateOnFocus: false, dedupingInterval: 60000 }
+  );
+  const expenseData = data?.data || null;
+
   console.log(expenseData);
+  if (error) {
+    console.error("Error fetching expense data:", error);
+  }
 
   return (
     <>
@@ -56,41 +52,44 @@ const Home: React.FC = () => {
               {expenseData?.yesterdayExpense || 0}
             </p>
           </div>
-          {expenseData?.currentAndPreviousMonthTotal?.map((expense) => (
-            <div
-              key={expense._id}
-              className="text-gray-200 text-xl bg-slate-400 bg-opacity-70 rounded-2xl w-11/12 ml-12 py-7 px-12 mt-7"
-            >
-              <div>
-                <p>{expense._id}:</p>
+          {expenseData?.currentAndPreviousMonthTotal?.map(
+            (expense: CurrentAndPreviousMonth) => (
+              <div
+                key={expense._id}
+                className="text-gray-200 text-xl bg-slate-400 bg-opacity-70 rounded-2xl w-11/12 ml-12 py-7 px-12 mt-7"
+              >
+                <div>
+                  <p>{expense._id}:</p>
+                </div>
+                <div className="flex justify-between">
+                  <p>
+                    <span>{`Past Month Expense:${
+                      expense?.previousMonthTotal ?? 0
+                    }Rs`}</span>
+                  </p>
+                  <p>
+                    <span>{` Current Month Expense :${
+                      expense.currentMonthTotal ?? 0
+                    }Rs`}</span>
+                  </p>
+                  <p>
+                    {expense.difference > 0 ? (
+                      <>
+                        Spent Extra: <span>{`${expense.difference} Rs`}</span>
+                      </>
+                    ) : expense.difference < 0 ? (
+                      <>
+                        Saved:{" "}
+                        <span>{`${Math.abs(expense.difference)} Rs`}</span>
+                      </>
+                    ) : (
+                      <>No Change</>
+                    )}
+                  </p>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <p>
-                  <span>{`Past Month Expense:${
-                    expense?.previousMonthTotal ?? 0
-                  }Rs`}</span>
-                </p>
-                <p>
-                  <span>{` Current Month Expense :${
-                    expense.currentMonthTotal ?? 0
-                  }Rs`}</span>
-                </p>
-                <p>
-                  {expense.difference > 0 ? (
-                    <>
-                      Spent Extra: <span>{`${expense.difference} Rs`}</span>
-                    </>
-                  ) : expense.difference < 0 ? (
-                    <>
-                      Saved: <span>{`${Math.abs(expense.difference)} Rs`}</span>
-                    </>
-                  ) : (
-                    <>No Change</>
-                  )}
-                </p>
-              </div>
-            </div>
-          ))}
+            )
+          )}
         </div>
       )}
     </>

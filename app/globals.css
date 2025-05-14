@@ -30,3 +30,17 @@
 /* .settingsAnimation {
   @apply transition-all ;
 } */
+
+/* Expense Table Styles */
+.expenseTableTr {
+  @apply border-t-2 border-b border-gray-200 ;
+}
+.expenseTableTr:last-child {
+  @apply border-b-0 ;
+}
+.expenseTableTd {
+  @apply border-r border-gray-200 px-6;
+}
+.expenseTableTd:last-child {
+  @apply border-r-0 pt-1;
+}
