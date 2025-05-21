@@ -1,216 +1,182 @@
 "use client";
 import { useAppSelector } from "@/store/hooks";
-import React, { ChangeEvent, FormEvent, useState } from "react";
+import { useState } from "react";
+import useSWR, { mutate } from "swr";
+interface incomeData {
+  createdAt: string;
+  incomeName: string;
+  income: number;
+  userId: string;
+  _id: string;
+}
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const Income: React.FC = () => {
+  const userDatas = useAppSelector((state) => state.user);
+  const dataURL = userDatas.userID
+    ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/income/getAllIncome/${userDatas.userID}`
+    : null;
 
-const AddIncome: React.FC = () => {
-  const userData = useAppSelector((state) => state.user);
-  const [isOpen, setIsOpen] = useState(false);
-  const [errors, setErrors] = useState({
+  const [isEditable, setIsEditable] = useState<string | null>(null);
+  const { data, error, isLoading } = useSWR(dataURL, fetcher, {
+    revalidateOnFocus: false,
+  });
+  const [inputData, setInputData] = useState({
     incomeName: "",
     income: "",
-    date: "",
+    id: "",
   });
-
-  const [incomeData, setIncomeData] = useState({
-    incomeName: "",
-    income: "",
-    isMonthlyIncome: false,
-    isIncluded: false,
-    date: "",
-  });
-  const handleFocus = () => {
-    setIsOpen(true);
-  };
-  // Handle input change
-  const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value, type } = e.target;
-    const newValue =
-      type === "checkbox" && e.target instanceof HTMLInputElement
-        ? e.target.checked
-        : value;
-    setIncomeData((prevData) => ({
-      ...prevData,
-      [name]: newValue,
-    }));
-
-    // Remove error message when user starts typing
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      [name]: "",
-    }));
-  };
-  // console.log(expenseData.isMonthlyExpense);
-
-  // Handle validation on blur
-  const handleBlur = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-
-    if (!value.trim()) {
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        [name]: `${name.replace(/([A-Z])/g, " $1")} is required`,
-      }));
-    }
-  };
-
-  // Handle form submission
-  const handleAddIncome = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    // Validate all fields before submitting
-    let newErrors = {
-      incomeName: incomeData.incomeName ? "" : "Income name is required",
-      income: incomeData.income ? "" : "Income is required",
-      date: incomeData.isMonthlyIncome
-        ? incomeData.date
-          ? ""
-          : "Date is required"
-        : "",
-    };
-
-    setErrors(newErrors);
-
-    // Check if any field has an error
-    if (Object.values(newErrors).some((error) => error !== "")) {
-      return;
-    }
-
-    // Submit form data
-    const newData = { ...incomeData, userId: userData.userID };
-    // console.log(newData);
-
+  const deleteIncomeHandler = async (id: string) => {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/income/addIncome`,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/deleteData/deleteOneIncome/${id}`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newData),
+        headers: {
+          "Content-Type": "application/json",
+        },
       }
     );
-
     if (!response.ok) {
-      console.log("Something has happened");
+      console.log(response);
       return;
     }
-
     const data = await response.json();
+    mutate(dataURL);
+
     console.log(data);
   };
-
+  const editIncomeHandler = async () => {
+    if (!inputData.incomeName || !inputData.income) {
+      return;
+    }
+    const bodyData = {
+      incomeName: inputData.incomeName,
+      income: inputData.income,
+    };
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/editData/editOneIncome/${inputData.id}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(bodyData),
+      }
+    );
+    if (!response.ok) {
+      console.log(response);
+      return;
+    }
+    const data = await response.json();
+    mutate(dataURL);
+    setIsEditable(null);
+    console.log(inputData);
+  };
+  const changeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInputData({ ...inputData, [event.target.name]: event.target.value });
+  };
+  const incomes: incomeData[] = data?.data;
   return (
     <>
-      <div className="mt-9">
-        {userData.user && (
-          <>
-            <p className="text-4xl text-gray-200 ml-8">
-              {`Welcome ${userData.user.firstName}`}
-            </p>
-            <div className="flex justify-around h-fit">
-              <div className="my-auto">
-                <img
-                  src="/images/signinimage.png"
-                  alt="image"
-                  width={500}
-                  height={500}
-                />
-              </div>
-              <div className="w-1/2 mt-10">
-                <div className="ml-8">
-                  <p className="text-4xl text-gray-200">
-                    ADD YOUR <span className="block mt-4">INCOMES HERE</span>
-                  </p>
-                </div>
-                <div className="mt-10">
-                  <form
-                    className="grid grid-cols-1 gap-6"
-                    onSubmit={handleAddIncome}
-                  >
-                    {/* Expense Name */}
-                    <div>
-                      <input
-                        className="addexpenseinput p-1"
-                        type="text"
-                        name="incomeName"
-                        placeholder="Enter your Income name"
-                        value={incomeData.incomeName}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                      />
-                      {errors.incomeName && (
-                        <p className="text-red-500">{errors.incomeName}</p>
-                      )}
-                    </div>
+      {isLoading ? (
+        <p>Loading...</p>
+      ) : (
+        <>
+          <div className="text-white text-3xl pt-12 flex justify-center">
+            <span>Your Income</span>
+          </div>
+          <div className="text-gray-100 flex h-screen items-start  ">
+            <div className="max-h-[500px] overflow-y-auto w-full opacity-70 rounded-2xl p-12">
+              <table className="  mx-auto  bg-slate-500  rounded-lg p-3">
+                <thead className="text-white">
+                  <tr>
+                    <th className="expenseTableTd pt-5 pb-2">No</th>
+                    <th className="expenseTableTd pt-5 pb-2">Income Name</th>
+                    <th className="expenseTableTd pt-5 pb-2">Amount</th>
+                    <th className="expenseTableTd pt-5 pb-2">Date</th>
+                    <th className="expenseTableTd pt-5 pb-2">Delete</th>
+                    <th className="expenseTableTd pt-5 -pb-10 ">Edit</th>
+                  </tr>
+                </thead>
+                <tbody className="">
+                  {incomes?.map((income, index) => {
+                    const isRowEditable = isEditable === income._id;
 
-                    {/* Income */}
-                    <div>
-                      <input
-                        className="addexpenseinput p-1"
-                        type="text"
-                        name="income"
-                        placeholder="Enter the income"
-                        value={incomeData.income}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                      />
-                      {errors.income && (
-                        <p className="text-red-500">{errors.income}</p>
-                      )}
-                    </div>
-                    <div>
-                      <p className="inline pr-2 text-white">
-                        Include to Monthly Income
-                      </p>
-                      <input
-                        type="checkbox"
-                        name="isMonthlyIncome"
-                        checked={incomeData.isMonthlyIncome}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    {/* Date */}
-                    {incomeData.isMonthlyIncome && (
-                      <div>
-                        <input
-                          className="addexpenseinput p-1"
-                          type="date"
-                          name="date"
-                          value={incomeData.date}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                        />
-                        {errors.date && (
-                          <p className="text-red-500">{errors.date}</p>
-                        )}
-                      </div>
-                    )}
-                    {incomeData.isMonthlyIncome && (
-                      <div>
-                        <p className="inline pr-2 text-white">
-                          Include to current Month
-                        </p>
-                        <input
-                          type="checkbox"
-                          name="isIncluded"
-                          checked={incomeData.isIncluded}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    )}
-                    {/* Submit Button */}
-                    <button className="p-2 rounded text-white" type="submit">
-                      Save
-                    </button>
-                  </form>
-                </div>
-              </div>
+                    return (
+                      <tr className="expenseTableTr" key={income._id}>
+                        <td className="expenseTableTd">{index + 1}</td>
+                        <td className="expenseTableTd">
+                          {isRowEditable ? (
+                            <input
+                              className="text-black"
+                              type="text"
+                              name="incomeName"
+                              value={inputData.incomeName}
+                              onChange={changeHandler}
+                            />
+                          ) : (
+                            income.incomeName
+                          )}
+                        </td>
+
+                        <td className="expenseTableTd">
+                          {isRowEditable ? (
+                            <input
+                              className="text-black"
+                              type="text"
+                              name="income"
+                              onChange={changeHandler}
+                              value={inputData.income}
+                            />
+                          ) : (
+                            income.income
+                          )}
+                        </td>
+                        <td className="expenseTableTd">
+                          {new Date(income.createdAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            }
+                          )}
+                        </td>
+                        <td className="expenseTableTd">
+                          <button
+                            onClick={() => deleteIncomeHandler(income._id)}
+                          >
+                            🗑️
+                          </button>
+                        </td>
+                        <td className="expenseTableTd">
+                          {isRowEditable ? (
+                            <button onClick={editIncomeHandler}>✅</button>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setIsEditable(income._id);
+                                setInputData({
+                                  incomeName: income.incomeName,
+
+                                  income: income.income.toString(),
+                                  id: income._id,
+                                });
+                              }}
+                            >
+                              ✏️
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          </>
-        )}
-      </div>
+          </div>
+        </>
+      )}
     </>
   );
 };
-
-export default AddIncome;
+export default Income;

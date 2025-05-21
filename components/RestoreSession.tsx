@@ -22,7 +22,8 @@ export default function RestoreSession() {
             `${process.env.NEXT_PUBLIC_BASE_URL}/api/user/${cookieData.token.id}`
           );
           const data = await response.json();
-
+          console.log(data);
+          
           setupUser(data.user, data.user._id);
         }
       } catch (error) {

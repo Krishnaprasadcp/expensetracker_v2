@@ -83,109 +83,114 @@ const Expense: React.FC = () => {
       {isLoading ? (
         <p>Loading...</p>
       ) : (
-        <div className="text-gray-100 flex h-screen items-start pt-12 ">
-          <div className="max-h-[500px] overflow-y-auto w-full ">
-            <table className="  mx-auto   ">
-              <thead>
-                <tr>
-                  <th className="expenseTableTd pt-5 pb-2">No</th>
-                  <th className="expenseTableTd pt-5 pb-2">Expense Name</th>
-                  <th className="expenseTableTd pt-5 pb-2">Category</th>
-                  <th className="expenseTableTd pt-5 pb-2">Amount</th>
-                  <th className="expenseTableTd pt-5 pb-2">Date</th>
-                  <th className="expenseTableTd pt-5 pb-2">Delete</th>
-                  <th className="expenseTableTd pt-5 -pb-10 ">Edit</th>
-                </tr>
-              </thead>
-              <tbody className="">
-                {expenses?.map((expense, index) => {
-                  const isRowEditable = isEditable === expense._id;
-
-                  return (
-                    <tr className="expenseTableTr" key={expense._id}>
-                      <td className="expenseTableTd">{index + 1}</td>
-                      <td className="expenseTableTd">
-                        {isRowEditable ? (
-                          <input
-                            className="text-black"
-                            type="text"
-                            name="expenseName"
-                            value={inputData.expenseName}
-                            onChange={changeHandler}
-                          />
-                        ) : (
-                          expense.expenseName
-                        )}
-                      </td>
-                      <td className="expenseTableTd">
-                        {isRowEditable ? (
-                          <input
-                            className="text-black"
-                            type="text"
-                            name="category"
-                            onChange={changeHandler}
-                            value={inputData.category}
-                          />
-                        ) : (
-                          expense.category
-                        )}
-                      </td>
-                      <td className="expenseTableTd">
-                        {isRowEditable ? (
-                          <input
-                            className="text-black"
-                            type="text"
-                            name="price"
-                            onChange={changeHandler}
-                            value={inputData.price}
-                          />
-                        ) : (
-                          expense.price
-                        )}
-                      </td>
-                      <td className="expenseTableTd">
-                        {new Date(expense.createdAt).toLocaleDateString(
-                          "en-US",
-                          {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          }
-                        )}
-                      </td>
-                      <td className="expenseTableTd">
-                        <button
-                          onClick={() => deleteExpenseHandler(expense._id)}
-                        >
-                          🗑️
-                        </button>
-                      </td>
-                      <td className="expenseTableTd">
-                        {isRowEditable ? (
-                          <button onClick={editExpenseHandler}>✅</button>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              setIsEditable(expense._id);
-                              setInputData({
-                                expenseName: expense.expenseName,
-                                category: expense.category,
-                                price: expense.price.toString(),
-                                id: expense._id,
-                              });
-                            }}
-                          >
-                            ✏️
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        <>
+          <div className="text-white text-3xl pt-12 flex justify-center">
+            <span>Your Expenses</span>
           </div>
-        </div>
+          <div className="text-gray-100 flex h-screen items-start pt-12 ">
+            <div className="max-h-[500px] overflow-y-auto w-full ">
+              <table className="  mx-auto bg-slate-500  rounded-lg p-3 opacity-70 ">
+                <thead>
+                  <tr>
+                    <th className="expenseTableTd pt-5 pb-2">No</th>
+                    <th className="expenseTableTd pt-5 pb-2">Expense Name</th>
+                    <th className="expenseTableTd pt-5 pb-2">Category</th>
+                    <th className="expenseTableTd pt-5 pb-2">Amount</th>
+                    <th className="expenseTableTd pt-5 pb-2">Date</th>
+                    <th className="expenseTableTd pt-5 pb-2">Delete</th>
+                    <th className="expenseTableTd pt-5 -pb-10 ">Edit</th>
+                  </tr>
+                </thead>
+                <tbody className="">
+                  {expenses?.map((expense, index) => {
+                    const isRowEditable = isEditable === expense._id;
+
+                    return (
+                      <tr className="expenseTableTr" key={expense._id}>
+                        <td className="expenseTableTd">{index + 1}</td>
+                        <td className="expenseTableTd">
+                          {isRowEditable ? (
+                            <input
+                              className="text-black"
+                              type="text"
+                              name="expenseName"
+                              value={inputData.expenseName}
+                              onChange={changeHandler}
+                            />
+                          ) : (
+                            expense.expenseName
+                          )}
+                        </td>
+                        <td className="expenseTableTd">
+                          {isRowEditable ? (
+                            <input
+                              className="text-black"
+                              type="text"
+                              name="category"
+                              onChange={changeHandler}
+                              value={inputData.category}
+                            />
+                          ) : (
+                            expense.category
+                          )}
+                        </td>
+                        <td className="expenseTableTd">
+                          {isRowEditable ? (
+                            <input
+                              className="text-black"
+                              type="text"
+                              name="price"
+                              onChange={changeHandler}
+                              value={inputData.price}
+                            />
+                          ) : (
+                            expense.price
+                          )}
+                        </td>
+                        <td className="expenseTableTd">
+                          {new Date(expense.createdAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            }
+                          )}
+                        </td>
+                        <td className="expenseTableTd">
+                          <button
+                            onClick={() => deleteExpenseHandler(expense._id)}
+                          >
+                            🗑️
+                          </button>
+                        </td>
+                        <td className="expenseTableTd">
+                          {isRowEditable ? (
+                            <button onClick={editExpenseHandler}>✅</button>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setIsEditable(expense._id);
+                                setInputData({
+                                  expenseName: expense.expenseName,
+                                  category: expense.category,
+                                  price: expense.price.toString(),
+                                  id: expense._id,
+                                });
+                              }}
+                            >
+                              ✏️
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
       )}
     </>
   );

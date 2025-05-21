@@ -49,6 +49,8 @@ function LayoutThing() {
             <Link href="/home/expenses">Expenses</Link>
             <Link href="/home/income">Income</Link>
             <Link href="/home/addexpense">Add Expense</Link>
+            <Link href="/home/addIncome">Add Income</Link>
+
             <div
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}

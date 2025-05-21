@@ -9,6 +9,8 @@ interface USER {
   secondName: string;
   email: string;
   phoneNumber: string;
+
+  createdAt: string;
   categories: CATEGORY[];
 }
 interface initialStateProp {
@@ -24,6 +26,8 @@ const initialState: initialStateProp = {
     secondName: "",
     email: "",
     phoneNumber: "",
+
+    createdAt: "",
     categories: [],
   },
 };

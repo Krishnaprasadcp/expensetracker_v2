@@ -39,7 +39,7 @@
   @apply border-b-0 ;
 }
 .expenseTableTd {
-  @apply border-r border-gray-200 px-6;
+  @apply border-r border-gray-200 px-6 ;
 }
 .expenseTableTd:last-child {
   @apply border-r-0 pt-1;

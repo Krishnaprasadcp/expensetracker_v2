@@ -1,4 +1,4 @@
-import INCOME, { Income } from "@/libs/database/models/incomeSchema";
+import INCOME from "@/libs/database/models/incomeSchema";
 import { ResponseSender } from "../../../utils/responseSender";
 
 export async function GET(
