@@ -109,7 +109,7 @@ const AddExpense: React.FC = () => {
     }
 
     const data = await response.json();
-    // console.log(data);
+    console.log(data);
   };
 
   return (
